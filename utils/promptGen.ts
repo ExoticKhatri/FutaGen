@@ -34,15 +34,17 @@ STRICT RULES:
 7. Make sure the prompt created should not make ai to generate multiple limbs or extra body parts unless the trait explicitly demands it
 8. Make sure the prompt should not be rejected by ai for violating content policy. If there are traits that are likely to trigger content filters, modify the wording to be more abstract and less explicit while still conveying the intended design.
 
-OUTPUT:
-- A single, cohesive prompt that seamlessly integrates all 6 layers.
-- The prompt should be clear, vivid, and optimized for generating a high-quality anime-style image based on the provided traits.
-
 STRUCTURED BRIEF TO CONVERT:
+
 ---
 ${structuredContent}
 ---
 
 Use any provided reference images STRICTLY FOR ART INSPIRATION ONLY (line quality, shading discipline). Do not copy pose, anatomy, or identifiable design elements.
+
+OUTPUT:
+- A single, cohesive 700-word long detailed prompt that seamlessly integrates all 6 layers.
+- The prompt should be clear, vivid, and optimized for generating a high-quality anime-style image based on the provided traits.
+
 `.trim();
 }

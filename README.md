@@ -8,6 +8,10 @@ Tired of manually creating character prompts? This tool generates randomized dem
 
 **Current State**: Prompt generation only (no direct image generation yet - but you can take the generated prompts and feed them into free APIs like Google Gemini for image generation).
 
+## Example Output
+
+![Generated Demon Ladies](public/Group%2016.png)
+
 ## How to Use
 
 1. Run the dev server:
