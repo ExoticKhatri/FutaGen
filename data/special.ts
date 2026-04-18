@@ -1,0 +1,27 @@
+export const specialTraits: Record<string, string> = {
+  "02": "Thin Tail",
+  "03": "Thick Tail",
+  "04": "Forked Tail",
+  "05": "Spaded Tail",
+  "06": "Small Bat Wings",
+  "07": "Small Feathered Wings",
+  "08": "Torn Asymmetrical Wings",
+  "09": "Sharp Fangs",
+  "10": "Extended Canines",
+  "11": "Subtle Third Eye",
+  "12": "Glowing Pupils",
+  "13": "Ritual Tattoos",
+  "14": "Bioluminescent Veins",
+  "15": "Bone Ornaments",
+  "16": "Runic Scars",
+  "17": "Ornamental Piercings",
+  "18": "Subtle Scale Patches",
+  "19": "Elongated Tongue",
+  "20": "Rare Demon Mutation",
+  // Adding a few more to fill the range
+  "21": "Pointed Elf-like Ears",
+  "22": "Halo of Floating Shards",
+  "23": "Dripping Shadow Aura",
+  "24": "Clawed Fingertips",
+  "25": "Crystalline Skin Patches"
+};

@@ -1,0 +1,229 @@
+"use client";
+
+import { useState, useCallback, useEffect } from 'react';
+import { RefreshCcw, Hash, LayoutGrid, Sparkles } from 'lucide-react';
+import { getTraitFromSeed, updateSeedWithTrait } from '@/utils/traitLogic';
+
+import { hairTraits } from '@/data/hair';
+import { skinTraits } from '@/data/skin';
+import { hornTraits } from '@/data/horn';
+import { faceTraits } from '@/data/face';
+import { bodyTraits } from '@/data/body';
+import { clothTraits } from '@/data/cloth';
+import { poseTraits } from '@/data/pose';
+import { specialTraits } from '@/data/special';
+
+const BASE_TRAIT_CONFIG = [
+  { id: 'hair', label: 'hair', mapping: hairTraits },
+  { id: 'skin', label: 'skin', mapping: skinTraits },
+  { id: 'horn', label: 'horn', mapping: hornTraits },
+  { id: 'face', label: 'face', mapping: faceTraits },
+  { id: 'body', label: 'body', mapping: bodyTraits },
+  { id: 'cloth', label: 'cloth', mapping: clothTraits },
+  { id: 'pose', label: 'pose', mapping: poseTraits },
+];
+
+const MAX_SPECIAL_SLOTS = 2;
+const MIN_LENGTH = BASE_TRAIT_CONFIG.length * 2;
+const MAX_LENGTH = MIN_LENGTH + (MAX_SPECIAL_SLOTS * 2);
+
+// Move the logic outside the component to keep it pure
+const createRandomSeed = () => {
+  const possibleLengths = [14, 16, 18];
+  const randomLength = possibleLengths[Math.floor(Math.random() * possibleLengths.length)];
+  let result = "";
+  for (let i = 0; i < randomLength; i++) {
+    result += Math.floor(Math.random() * 10).toString();
+  }
+  return result;
+};
+
+interface SidebarProps {
+  onGenerate: (prompt: string) => void;
+  isDisabled: boolean;
+}
+
+export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
+  const [seed, setSeed] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setSeed(createRandomSeed());
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const generateRandomSeed = useCallback(() => {
+    setSeed(createRandomSeed());
+  }, []);
+
+  const handleAction = (forcedSeed?: string) => {
+    if (isDisabled || !mounted) return;
+
+    // Use the forced seed if provided (for the "Random" button), otherwise use state
+    const currentSeed = forcedSeed || seed;
+    const workingSeed = currentSeed.padEnd(MAX_LENGTH, "0");
+    const traits: string[] = [];
+
+    BASE_TRAIT_CONFIG.forEach((t, i) => {
+      const pair = workingSeed.substring(i * 2, i * 2 + 2);
+      const resolved = getTraitFromSeed(pair, t.mapping);
+      if (resolved.name !== "00") {
+        traits.push(`${t.label}=${resolved.name}`);
+      }
+    });
+
+    for (let i = 0; i < MAX_SPECIAL_SLOTS; i++) {
+      const idx = BASE_TRAIT_CONFIG.length + i;
+      const pair = workingSeed.substring(idx * 2, idx * 2 + 2);
+      const resolved = getTraitFromSeed(pair, specialTraits);
+      if (resolved.name !== "00" && pair !== "00") {
+        traits.push(`mutation=${resolved.name}`);
+      }
+    }
+
+    onGenerate(traits.join(", "));
+  };
+
+  // New function for the side button
+  const handleInstantRandom = () => {
+    const newSeed = createRandomSeed();
+    setSeed(newSeed); // Update the UI
+    handleAction(newSeed); // Pass it directly to bypass state batching
+  };
+
+  // 3. Prevent rendering the seed-dependent UI until mounted to avoid mismatch
+  if (!mounted) {
+    return <div className="w-full h-full bg-black animate-pulse" />;
+  }
+
+  return (
+    <div className={`flex flex-col h-full space-y-4 transition-all duration-500 ${isDisabled ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2 text-zinc-500">
+            <Hash size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-wider">DNA Seed</span>
+          </div>
+          <span className="text-[9px] text-zinc-700 font-mono italic">{seed.length}/{MAX_LENGTH}</span>
+        </div>
+        
+        <div className="relative">
+          <textarea
+            aria-label='Seed'
+            disabled={isDisabled}
+            value={seed}
+            onChange={(e) => setSeed(e.target.value.replace(/\D/g, '').substring(0, MAX_LENGTH))}
+            className="w-full bg-zinc-900/40 border border-zinc-800 rounded-lg pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-teal-500/50 transition-all text-zinc-400 font-mono resize-none leading-relaxed no-scrollbar"
+            rows={3}
+          />
+          <button
+            aria-label="Generate Random Seed"
+            onClick={generateRandomSeed}
+            disabled={isDisabled}
+            className="absolute right-2 top-3 text-zinc-500 hover:text-teal-500 transition-transform active:rotate-180 duration-500"
+          >
+            <RefreshCcw size={14} />
+          </button>
+        </div>
+      </div>
+
+      <hr className="border-zinc-900/50 mx-1" />
+
+      <div className="flex-1 space-y-6 overflow-y-auto pr-1 no-scrollbar pb-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1 text-zinc-500 mb-2">
+            <LayoutGrid size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Core Parameters</span>
+          </div>
+          
+          {BASE_TRAIT_CONFIG.map((trait, index) => {
+            const workingSeed = seed.padEnd(MAX_LENGTH, "0");
+            const rawPair = workingSeed.substring(index * 2, index * 2 + 2);
+            const resolved = getTraitFromSeed(rawPair, trait.mapping);
+
+            return (
+              <div key={trait.id} className="space-y-1.5">
+                <div className="flex justify-between px-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                  <label>{trait.id}</label>
+                  <span className="font-mono text-teal-500/40">{rawPair}</span>
+                </div>
+                <select
+                  aria-label={trait.id}
+                  disabled={isDisabled}
+                  value={resolved.code}
+                  onChange={(e) => setSeed(updateSeedWithTrait(seed, index, e.target.value, MAX_LENGTH))}
+                  className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-zinc-300 focus:outline-none focus:border-teal-500 appearance-none"
+                >
+                  <option value="00">AI Decide (00)</option>
+                  {Object.entries(trait.mapping).map(([code, name]) => (
+                    <option key={code} value={code}>{name} ({code})</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center gap-2 px-1 text-purple-500/70 mb-2">
+            <Sparkles size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Special Mutations</span>
+          </div>
+
+          {[...Array(MAX_SPECIAL_SLOTS)].map((_, i) => {
+            const slotIndex = BASE_TRAIT_CONFIG.length + i;
+            const workingSeed = seed.padEnd(MAX_LENGTH, "0");
+            const rawPair = workingSeed.substring(slotIndex * 2, slotIndex * 2 + 2);
+            const resolved = getTraitFromSeed(rawPair, specialTraits);
+
+            return (
+              <div key={`special-${i}`} className="space-y-1.5">
+                <div className="flex justify-between px-1 text-[9px] font-bold uppercase tracking-widest text-purple-400/50">
+                  <label>Mutation Slot {i + 1}</label>
+                  <span className="font-mono text-purple-500/30">{rawPair}</span>
+                </div>
+                <select
+                  aria-label={`Mutation Slot ${i + 1}`}
+                  disabled={isDisabled}
+                  value={resolved.code}
+                  onChange={(e) => setSeed(updateSeedWithTrait(seed, slotIndex, e.target.value, MAX_LENGTH))}
+                  className="w-full bg-purple-900/10 border border-purple-900/30 rounded-lg px-3 py-2 text-[11px] text-zinc-300 focus:outline-none focus:border-purple-500/50 appearance-none"
+                >
+                  <option value="00">None (00)</option>
+                  {Object.entries(specialTraits).map(([code, name]) => (
+                    <option key={code} value={code}>{name} ({code})</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="pt-2 flex gap-2">
+          {/* Your existing Generate button */}
+  <button 
+    onClick={() => handleAction()}
+    disabled={isDisabled}
+    className="flex-1 bg-teal-500 hover:bg-teal-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-black text-xs font-black py-4 rounded-xl transition-all uppercase tracking-tighter shadow-xl shadow-teal-500/10 active:scale-95"
+  >
+    {isDisabled ? 'Sequencing...' : 'Generate Character'}
+  </button>
+
+      
+  {/* The "Instant Random" button */}
+  <button
+    onClick={handleInstantRandom}
+    disabled={isDisabled}
+    title="Instant Randomize & Generate"
+    className="flex-none bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-4 rounded-xl transition-all active:scale-95 text-teal-500 disabled:opacity-50"
+  >
+    <Sparkles size={18} />
+        </button>
+        </div>
+    </div>
+  );
+}

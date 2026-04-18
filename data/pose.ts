@@ -1,0 +1,61 @@
+export const poseTraits: Record<string, string> = {
+  // Graceful & Elegant (01-10)
+  "01": "Elegant Standing, Calm Expression",
+  "02": "Statuesque Pose, Serene Smile",
+  "03": "Head Tilted Back, Blissful Look",
+  "04": "Sitting Gracefully, Aloof Gaze",
+  "05": "One Hand on Hip, Confident Smirk",
+  "06": "Kneeling Elegantly, Gentle Sorrow",
+  "07": "Arms Crossed, Judging Stare",
+  "08": "Looking Over Shoulder, Playful Wink",
+  "09": "Delicate Hand to Face, Melancholic",
+  "10": "Swaying Hip Pose, Seductive Smile",
+
+  // Predatory & Intense (11-20)
+  "11": "Crouched Low, Predatory Intensity",
+  "12": "Leaning Forward, Fierce Snarl",
+  "13": "Sharp Turn, Intimidating Gaze",
+  "14": "Hand Reaching Forward, Dominant",
+  "15": "Lowered Head, Menacing Shadowed Eyes",
+  "16": "Arching Back, Wild Untamed Energy",
+  "17": "Feral Squat, Hunger in Eyes",
+  "18": "Looming Forward, Sinister Grin",
+  "19": "Ready to Pounce, Cold Determination",
+  "20": "Tense Stance, Boiling Rage",
+
+  // Supernatural & Ethereal (21-30)
+  "21": "Floating Mid-Air, Dreamy Trance",
+  "22": "Levitating, Expressionless Void",
+  "23": "Twisting Torso, Uncanny Contortion",
+  "24": "Drifting Sideways, Ghostly Serenity",
+  "25": "Upside Down Float, Mischievous Grin",
+  "26": "Sprawled in Void, Bored Divinity",
+  "27": "T-Pose Variation, Divine Radiance",
+  "28": "Coiled Position, Slithering Grace",
+  "29": "Back to Camera, Head Turned 180 Degrees",
+  "30": "Fading into Shadows, Sad Departure",
+
+  // Alluring & Succubus-Themed (31-40)
+  "31": "Lying Down, Alluring Invitation",
+  "32": "Biting Lip, Intense Desire",
+  "33": "One Leg Raised, Playful Tease",
+  "34": "Hands Behind Head, Relaxed Confidence",
+  "35": "Self-Embrace, Ecstatic Pleasure",
+  "36": "Stretching, Lazy Morning Vibe",
+  "37": "Whispering Gesture, Secretive Smirk",
+  "38": "Languid Recline, Royal Boredom",
+  "39": "Bending Forward, Intense Focus",
+  "40": "Pulling Hair Back, Challenging Stare",
+
+  // Chaotic & Demonic (41-50)
+  "41": "Laughing Maniacally, Wide Stance",
+  "42": "Gripping Face, Mental Anguish",
+  "43": "Bleeding Eyes, Stoic Silence",
+  "44": "Worshiping Gesture, Religious Ecstasy",
+  "45": "Sitting on Throne, Absolute Dominance",
+  "46": "Clawing at Chest, Heartbroken Rage",
+  "47": "Spitting Blood, Defiant Gaze",
+  "48": "Covering Mouth, Muffled Laughter",
+  "49": "Looking Down, Pitiful Contempt",
+  "50": "Ascending, Transcendental Calm",
+};
