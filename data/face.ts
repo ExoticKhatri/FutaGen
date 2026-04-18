@@ -1,4 +1,6 @@
-export const faceTraits: Record<string, string> = {
+import { TraitMapping } from '@/types/trait';
+
+export const faceTraits: TraitMapping = {
   // Graceful & Soft (01-10)
   "01": "Gentle Delicate",
   "02": "Youthful Rounded",
@@ -16,7 +18,7 @@ export const faceTraits: Record<string, string> = {
   "12": "Confident Bold",
   "13": "Mysterious Subtle",
   "14": "Aloof Distant",
-  "15": "Predatory Alluring",
+  "15": { name: "Predatory Alluring", description: "Sharp, narrow eyes with an intensely focused, dangerously attractive gaze that tracks movement naturally." },
   "16": "Melancholic Soft",
   "17": "Intimidating Dominant",
   "18": "Cheerful Bright",
@@ -25,13 +27,13 @@ export const faceTraits: Record<string, string> = {
 
   // Demonic & Altered (21-35)
   "21": "Succubus Smirk",
-  "22": "Void-Eyed Stare",
+  "22": { name: "Void-Eyed Stare", description: "Empty, unnerving black sockets that seem to absorb surrounding light, offering a hollow, unnatural stare." },
   "23": "Shattered Mask-Like Face",
-  "24": "Vampiric Aristocrat",
+  "24": { name: "Vampiric Aristocrat", description: "Strikingly pale, angular features with a perfectly poised, eternally bored expression of eternal superiority." },
   "25": "Third-Eye Insight",
   "26": "Sunken Hollow Beauty",
   "27": "Doll-Like Porcelain Static",
-  "28": "Feline-Featured Predator",
+  "28": { name: "Feline-Featured Predator", description: "Subtle cat-like structures with a slightly wider bridge of the nose and split pupils, expressing a coiled anticipation." },
   "29": "Serpentine Elegance",
   "30": "Stitched Maidenly Grace",
   "31": "Crying Black Tears",
@@ -45,7 +47,7 @@ export const faceTraits: Record<string, string> = {
   "37": "Bleeding Eye Sockets",
   "38": "Multiple Eyes (Symmetric)",
   "39": "Fanged Grace",
-  "40": "Web-Veined Cheeks",
+  "40": { name: "Web-Veined Cheeks", description: "Translucent skin around the cheeks revealing delicate, darkly-glowing webbed blood vessels underneath." },
   "41": "Star-Lit Pupils",
   "42": "Bioluminescent Freckles",
   "43": "Shadow-Wreathed Visage",

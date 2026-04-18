@@ -1,4 +1,6 @@
-export const specialTraits: Record<string, string> = {
+import { TraitMapping } from '@/types/trait';
+
+export const specialTraits: TraitMapping = {
   "02": "Thin Tail",
   "03": "Thick Tail",
   "04": "Forked Tail",

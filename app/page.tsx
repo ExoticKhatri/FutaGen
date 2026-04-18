@@ -1,69 +1,89 @@
 "use client";
 
-import { useState } from 'react';
-import ViewToggle from '@/components/ViewToggle';
+import { useState, useEffect } from 'react';
+import Dock from '@/components/Dock';
 import Sidebar from '@/components/Sidebar';
-import GenerationView from '@/components/GenerationView';
-import { buildFinalPrompt } from '@/utils/promptBuilder';
-import { refinePromptWithAI } from '@/actions/propmtGen';
+import CanvasView from '@/components/CanvasView';
+import { buildSystemPrompt, refinePromptWithAI } from '@/actions/promptRefiner';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'canvas' | 'library'>('canvas');
+  const [debugContent, setDebugContent] = useState<string>('');
+  const [systemPrompt, setSystemPrompt] = useState<string>('');
+  const [aiPrompt, setAiPrompt] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [finalPrompt, setFinalPrompt] = useState<string>("");
+  const [generateRandomTrigger, setGenerateRandomTrigger] = useState<number>(0);
 
   const handleToggle = () => {
     setActiveTab((prev) => (prev === 'canvas' ? 'library' : 'canvas'));
   };
 
-  const onGenerateSignal = async (compiledTraits: string) => {
-    setIsGenerating(true);
-    const localPrompt = buildFinalPrompt(compiledTraits);
+  // Convert raw attributes into the explicit baseline system prompt continuously
+  useEffect(() => {
+    if (!debugContent) return;
+    buildSystemPrompt(debugContent).then(setSystemPrompt);
+  }, [debugContent]);
 
+  // Execute AI Refinement specifically when the generation action is requested natively
+  const handleGenerate = async () => {
+    if (!systemPrompt || isGenerating) return;
+    setIsGenerating(true);
+    setAiPrompt('');
+    
     try {
-      const aiEnhancedPrompt = await refinePromptWithAI(localPrompt);
-      setFinalPrompt(aiEnhancedPrompt);
-    } catch (error) {
-      console.error("Flow Error:", error);
-      setFinalPrompt(localPrompt);
+      const refinedResult = await refinePromptWithAI(systemPrompt);
+      setAiPrompt(refinedResult);
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <main className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full bg-black text-white overflow-y-auto lg:overflow-hidden no-scrollbar">
+    <main className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full bg-black text-white overflow-x-hidden lg:overflow-hidden">
       
-      {/* Sidebar - Stacked on mobile, side-by-side on desktop */}
+      {/* CONTAINER A: VIEWPORT / GENERATION AREA */}
+      <div className="relative flex-1 min-h-screen bg-[#050505] flex flex-col items-center justify-center order-1 lg:order-2">
+        
+        <Dock 
+          activeTab={activeTab} 
+          onToggle={handleToggle} 
+          isDisabled={isGenerating}
+          onGenerate={handleGenerate}
+          onRandomize={() => setGenerateRandomTrigger((prev) => prev + 1)}
+        />
+
+        {activeTab === 'canvas' ? (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <CanvasView 
+              debugContent={debugContent} 
+              systemPrompt={systemPrompt}
+              aiPrompt={aiPrompt}
+              isGenerating={isGenerating}
+              // These handlers ensure your edits are saved to the Home state
+              onSystemPromptChange={(newVal) => setSystemPrompt(newVal)}
+              onAiPromptChange={(newVal) => setAiPrompt(newVal)}
+            />
+          </div>
+        ) : (
+          <div className="text-center opacity-20">
+            <p className="text-zinc-500 font-mono text-sm uppercase tracking-[0.3em]">Browsing Archives</p>
+          </div>
+        )}
+      </div>
+
+      {/* CONTAINER B: SIDEBAR / CONTROLS */}
       {activeTab === 'canvas' && (
-        <aside className="w-full lg:w-1/4 lg:h-full border-b lg:border-b-0 lg:border-r border-zinc-800 p-4 min-w-[320px]">
-          <Sidebar onGenerate={onGenerateSignal} isDisabled={isGenerating} />
+        <aside className="w-full lg:w-1/4 lg:h-full border-t lg:border-t-0 lg:border-r border-zinc-800 p-4 min-w-[320px] order-2 lg:order-1 bg-black shrink-0 overflow-y-auto">
+          <Sidebar 
+            disable={isGenerating} 
+            generaterandom={generateRandomTrigger} 
+            onChange={setDebugContent} 
+          />
         </aside>
       )}
 
-      {/* Main Container - Full height on mobile and desktop */}
-      <div className="flex-1 min-h-screen lg:h-full bg-[#050505] p-4 relative flex flex-col">
-        
-        <div className="mb-4">
-          <ViewToggle activeTab={activeTab} onToggle={handleToggle} />
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-zinc-900 rounded-3xl p-4 lg:p-6 overflow-hidden bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-zinc-900/20 via-transparent to-transparent">
-            
-           {activeTab === 'canvas' ? (
-             <GenerationView 
-               prompt={finalPrompt} 
-               isGenerating={isGenerating} 
-               onPromptChange={setFinalPrompt}
-             />
-           ) : (
-             <div className="text-center opacity-20">
-               <p className="text-zinc-500 font-mono text-sm uppercase tracking-[0.3em]">Browsing Archives</p>
-             </div>
-           )}
-
-        </div>
-      </div>
     </main>
   );
 }

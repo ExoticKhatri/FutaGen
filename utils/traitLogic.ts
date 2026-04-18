@@ -2,10 +2,12 @@
  * Handles the mapping of seed pairs to traits with fallback logic.
  */
 
+import { TraitMapping } from '@/types/trait';
+
 export const getTraitFromSeed = (
   pair: string, 
-  mapping: Record<string, string>
-): { name: string; code: string } => {
+  mapping: TraitMapping
+): { name: string; code: string; description?: string } => {
   
   // Explicitly check for empty, single digit, or "00"
   // This triggers "AI Decide" mode
@@ -17,7 +19,11 @@ export const getTraitFromSeed = (
 
   // 1. Direct Match
   if (mapping[normalizedPair]) {
-    return { name: mapping[normalizedPair], code: normalizedPair };
+    const rawTrait = mapping[normalizedPair];
+    if (typeof rawTrait === "string") {
+      return { name: rawTrait, code: normalizedPair };
+    }
+    return { name: rawTrait.name, code: normalizedPair, description: rawTrait.description };
   }
 
   // 2. Out of Range / No Match: Pseudo-random valid selection
@@ -29,7 +35,11 @@ export const getTraitFromSeed = (
     const randomIndex = seedNum % validKeys.length;
     const selectedKey = validKeys[randomIndex];
     
-    return { name: mapping[selectedKey], code: selectedKey };
+    const rawTrait = mapping[selectedKey];
+    if (typeof rawTrait === "string") {
+      return { name: rawTrait, code: selectedKey };
+    }
+    return { name: rawTrait.name, code: selectedKey, description: rawTrait.description };
   }
 
   // 3. Absolute Fallback

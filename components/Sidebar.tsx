@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCcw, Hash, LayoutGrid, Sparkles } from 'lucide-react';
 import { getTraitFromSeed, updateSeedWithTrait } from '@/utils/traitLogic';
 
@@ -39,11 +39,12 @@ const createRandomSeed = () => {
 };
 
 interface SidebarProps {
-  onGenerate: (prompt: string) => void;
-  isDisabled: boolean;
+  disable: boolean;
+  generaterandom: number;
+  onChange?: (result: string) => void;
 }
 
-export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
+export default function Sidebar({ disable, generaterandom, onChange }: SidebarProps) {
   const [seed, setSeed] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
@@ -55,23 +56,32 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const generateRandomSeed = useCallback(() => {
-    setSeed(createRandomSeed());
-  }, []);
+  // Watch for the generaterandom prop to trigger a new random seed
+  useEffect(() => {
+    if (mounted && generaterandom > 0) {
+      const frame = requestAnimationFrame(() => {
+        setSeed(createRandomSeed());
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [generaterandom, mounted]);
 
-  const handleAction = (forcedSeed?: string) => {
-    if (isDisabled || !mounted) return;
+  // Whenever seed changes, parse the traits and instantly report back
+  useEffect(() => {
+    if (!mounted || !seed || !onChange) return;
 
-    // Use the forced seed if provided (for the "Random" button), otherwise use state
-    const currentSeed = forcedSeed || seed;
-    const workingSeed = currentSeed.padEnd(MAX_LENGTH, "0");
+    const workingSeed = seed.padEnd(MAX_LENGTH, "0");
     const traits: string[] = [];
 
     BASE_TRAIT_CONFIG.forEach((t, i) => {
       const pair = workingSeed.substring(i * 2, i * 2 + 2);
       const resolved = getTraitFromSeed(pair, t.mapping);
       if (resolved.name !== "00") {
-        traits.push(`${t.label}=${resolved.name}`);
+        let traitString = `${t.label}=${resolved.name}`;
+        if (resolved.description) {
+          traitString += ` - [Details: ${resolved.description}]`;
+        }
+        traits.push(traitString);
       }
     });
 
@@ -80,27 +90,28 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
       const pair = workingSeed.substring(idx * 2, idx * 2 + 2);
       const resolved = getTraitFromSeed(pair, specialTraits);
       if (resolved.name !== "00" && pair !== "00") {
-        traits.push(`mutation=${resolved.name}`);
+        let traitString = `mutation=${resolved.name}`;
+        if (resolved.description) {
+          traitString += ` - [Details: ${resolved.description}]`;
+        }
+        traits.push(traitString);
       }
     }
 
-    onGenerate(traits.join(", "));
-  };
+    onChange(traits.join(",\n"));
+  }, [seed, mounted, onChange]);
 
-  // New function for the side button
-  const handleInstantRandom = () => {
-    const newSeed = createRandomSeed();
-    setSeed(newSeed); // Update the UI
-    handleAction(newSeed); // Pass it directly to bypass state batching
-  };
+  const generateRandomSeedLocal = useCallback(() => {
+    setSeed(createRandomSeed());
+  }, []);
 
-  // 3. Prevent rendering the seed-dependent UI until mounted to avoid mismatch
+  // Prevent rendering the seed-dependent UI until mounted to avoid mismatch
   if (!mounted) {
     return <div className="w-full h-full bg-black animate-pulse" />;
   }
 
   return (
-    <div className={`flex flex-col h-full space-y-4 transition-all duration-500 ${isDisabled ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+    <div className={`flex flex-col h-full space-y-4 transition-all duration-500 ${disable ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-zinc-500">
@@ -113,7 +124,7 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
         <div className="relative">
           <textarea
             aria-label='Seed'
-            disabled={isDisabled}
+            disabled={disable}
             value={seed}
             onChange={(e) => setSeed(e.target.value.replace(/\D/g, '').substring(0, MAX_LENGTH))}
             className="w-full bg-zinc-900/40 border border-zinc-800 rounded-lg pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-teal-500/50 transition-all text-zinc-400 font-mono resize-none leading-relaxed no-scrollbar"
@@ -121,16 +132,14 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
           />
           <button
             aria-label="Generate Random Seed"
-            onClick={generateRandomSeed}
-            disabled={isDisabled}
+            onClick={generateRandomSeedLocal}
+            disabled={disable}
             className="absolute right-2 top-3 text-zinc-500 hover:text-teal-500 transition-transform active:rotate-180 duration-500"
           >
             <RefreshCcw size={14} />
           </button>
         </div>
       </div>
-
-      <hr className="border-zinc-900/50 mx-1" />
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-1 no-scrollbar pb-4">
         <div className="space-y-4">
@@ -152,15 +161,18 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
                 </div>
                 <select
                   aria-label={trait.id}
-                  disabled={isDisabled}
+                  disabled={disable}
                   value={resolved.code}
                   onChange={(e) => setSeed(updateSeedWithTrait(seed, index, e.target.value, MAX_LENGTH))}
                   className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-zinc-300 focus:outline-none focus:border-teal-500 appearance-none"
                 >
                   <option value="00">AI Decide (00)</option>
-                  {Object.entries(trait.mapping).map(([code, name]) => (
-                    <option key={code} value={code}>{name} ({code})</option>
-                  ))}
+                  {Object.entries(trait.mapping).map(([code, value]) => {
+                    const displayName = typeof value === 'string' ? value : value.name;
+                    return (
+                      <option key={code} value={code}>{displayName} ({code})</option>
+                    );
+                  })}
                 </select>
               </div>
             );
@@ -187,43 +199,24 @@ export default function Sidebar({ onGenerate, isDisabled }: SidebarProps) {
                 </div>
                 <select
                   aria-label={`Mutation Slot ${i + 1}`}
-                  disabled={isDisabled}
+                  disabled={disable}
                   value={resolved.code}
                   onChange={(e) => setSeed(updateSeedWithTrait(seed, slotIndex, e.target.value, MAX_LENGTH))}
                   className="w-full bg-purple-900/10 border border-purple-900/30 rounded-lg px-3 py-2 text-[11px] text-zinc-300 focus:outline-none focus:border-purple-500/50 appearance-none"
                 >
                   <option value="00">None (00)</option>
-                  {Object.entries(specialTraits).map(([code, name]) => (
-                    <option key={code} value={code}>{name} ({code})</option>
-                  ))}
+                  {Object.entries(specialTraits).map(([code, value]) => {
+                    const displayName = typeof value === 'string' ? value : value.name;
+                    return (
+                      <option key={code} value={code}>{displayName} ({code})</option>
+                    );
+                  })}
                 </select>
               </div>
             );
           })}
         </div>
       </div>
-
-      <div className="pt-2 flex gap-2">
-          {/* Your existing Generate button */}
-  <button 
-    onClick={() => handleAction()}
-    disabled={isDisabled}
-    className="flex-1 bg-teal-500 hover:bg-teal-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-black text-xs font-black py-4 rounded-xl transition-all uppercase tracking-tighter shadow-xl shadow-teal-500/10 active:scale-95"
-  >
-    {isDisabled ? 'Sequencing...' : 'Generate Character'}
-  </button>
-
-      
-  {/* The "Instant Random" button */}
-  <button
-    onClick={handleInstantRandom}
-    disabled={isDisabled}
-    title="Instant Randomize & Generate"
-    className="flex-none bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-4 rounded-xl transition-all active:scale-95 text-teal-500 disabled:opacity-50"
-  >
-    <Sparkles size={18} />
-        </button>
-        </div>
     </div>
   );
 }
