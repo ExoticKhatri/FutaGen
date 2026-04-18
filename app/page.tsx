@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Dock from '@/components/Dock';
 import Sidebar from '@/components/Sidebar';
 import CanvasView from '@/components/CanvasView';
+import LibraryView from '@/components/LibraryView';
 import { generateAIReadyPrompt } from '@/utils/promptGen';
 import { refinePromptWithAI } from '@/actions/promptRefiner';
 
@@ -75,9 +76,9 @@ export default function Home() {
             />
           </div>
         ) : (
-          <div className="text-center opacity-20">
-            <p className="text-zinc-500 font-mono text-sm uppercase tracking-[0.3em]">Browsing Archives</p>
-          </div>
+<div className="w-full h-full">
+    <LibraryView />
+  </div>
         )}
       </div>
 

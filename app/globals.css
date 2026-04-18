@@ -40,3 +40,9 @@ body {
   scrollbar-width: none !important;
   /* Firefox */
 }
+
+/* Animation delay utility */
+[data-animation-delay] {
+  animation-fill-mode: both;
+  animation-delay: attr(data-animation-delay);
+}
