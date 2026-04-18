@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Dock from '@/components/Dock';
 import Sidebar from '@/components/Sidebar';
 import CanvasView from '@/components/CanvasView';
-import { buildSystemPrompt, refinePromptWithAI } from '@/actions/promptRefiner';
+import { generateFinalSystemPrompt } from '@/utils/promptGen';
+import { refinePromptWithAI } from '@/actions/promptRefiner';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'canvas' | 'library'>('canvas');
@@ -18,11 +19,18 @@ export default function Home() {
     setActiveTab((prev) => (prev === 'canvas' ? 'library' : 'canvas'));
   };
 
-  // Convert raw attributes into the explicit baseline system prompt continuously
-  useEffect(() => {
-    if (!debugContent) return;
-    buildSystemPrompt(debugContent).then(setSystemPrompt);
-  }, [debugContent]);
+  const handleSidebarChange = (newTraits: string) => {
+    setDebugContent(newTraits);
+    
+    if (!newTraits) {
+      setSystemPrompt('');
+    } else {
+      // We generate the prompt once here. 
+      // The user can then override it in the CanvasView.
+      const finalFullPrompt = generateFinalSystemPrompt(newTraits);
+      setSystemPrompt(finalFullPrompt);
+    }
+  };
 
   // Execute AI Refinement specifically when the generation action is requested natively
   const handleGenerate = async () => {
@@ -79,7 +87,7 @@ export default function Home() {
           <Sidebar 
             disable={isGenerating} 
             generaterandom={generateRandomTrigger} 
-            onChange={setDebugContent} 
+            onChange={handleSidebarChange} 
           />
         </aside>
       )}
