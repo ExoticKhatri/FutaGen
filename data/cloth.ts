@@ -36,5 +36,64 @@ export const clothTraits: Record<string, string> = {
   "27": "Spider-Silk Mesh",
   "28": "Embroidered Veil-Cloth",
   "29": "Dual-Tone Split Wrap",
-  "30": "Tapered Shadow-Fabric"
+  "30": "Tapered Shadow-Fabric",
+  // --- Asymmetrical & Structural (31-40) ---
+  "31": "Single-Shoulder-Draped-Sash",
+  "32": "Diagonal-Chest-Wrap-with-Buckles",
+  "33": "High-Slit-Crotch-Panel-Cloth",
+  "34": "X-Frame-Body-Binding-Silk",
+  "35": "Open-Sternum-Hanging-Fabric",
+  "36": "Angular-Geometric-Loin-Plate",
+  "37": "Suspended-Waist-Panel-without-Side-Coverage",
+  "38": "Split-Hem-Micro-Tunic",
+  "39": "Vertical-Stripe-Body-Drape",
+  "40": "Cross-Halter-Micro-Top-Only",
+
+  // --- High-Tension & Tech-Minimal (41-50) ---
+  "41": "Latex-Look-Tension-Briefs",
+  "42": "Metallic-Ring-Linked-Fabric-Scraps",
+  "43": "Heavy-Buckle-Loincloth-System",
+  "44": "Elastic-Fiber-Negative-Space-Wrap",
+  "45": "Vacuum-Sealed-Thin-Membrane",
+  "46": "Industrial-Strap-Crotch-Shield",
+  "47": "Ribbon-Tied-Gladiator-Briefs",
+  "48": "Tension-Wire-Supported-Silk",
+  "49": "Cyber-Punk-Reflective-Strips-only",
+  "50": "Liquid-Metal-Body-Paint-Clothing",
+
+  // --- Ethereal & Translucent (51-60) ---
+  "51": "Sheer-Gauze-Hip-Veil",
+  "52": "Translucent-Iridescent-Mist-Cloth",
+  "53": "Fine-Micro-Mesh-Loincloth",
+  "54": "Ghostly-Semi-Transparent-Hanging-Rags",
+  "55": "Frosted-Vinyl-Minimalist-Briefs",
+  "56": "Tattered-Spirit-Thread-Wraps",
+  "57": "Smoky-Gradient-Tapered-Fabric",
+  "58": "Dew-Drenched-Clinging-Silk",
+  "59": "Ethereal-Cloud-Fiber-Minimal-Cut",
+  "60": "Bioluminescent-Veil-Strips",
+
+  // --- Ritual & Ancient-Gothic (61-70) ---
+  "61": "Hieroglyphic-Engraved-Leather-Loincloth",
+  "62": "Heavy-Chain-Linked-Suede-Panels",
+  "63": "Ornate-Gold-Frame-Fabric-Inserts",
+  "64": "Velvet-Ribbon-Body-Cage",
+  "65": "Serrated-Edge-Obsidian-Cloth",
+  "66": "Rope-Bound-Hessian-Scraps",
+  "67": "Monastic-Tattered-Sash-Belt",
+  "68": "Ancient-Sigil-Inscribed-Silk-Bindings",
+  "69": "Crystalline-Shard-Embroidered-Fabric",
+  "70": "Bone-Linked-Raw-Hide-Wrap",
+
+  // --- Flowing & Liquid-Styles (71-80) ---
+  "71": "Dripping-Oil-Texture-Latex-Briefs",
+  "72": "Waterfall-Sleeve-Tops-No-Bottoms",
+  "73": "Shifting-Quicksilver-Crotch-Plate",
+  "74": "Molten-Gold-Effect-Hip-Wrap",
+  "75": "Trailing-Floor-Length-Thin-Ribbons",
+  "76": "Bio-Organic-Flesh-Molded-Garment",
+  "77": "Melting-Wax-Appearance-Fabric",
+  "78": "Tapered-Feathered-Edge-Silk",
+  "79": "Venomous-Green-Glow-Slime-Cloth",
+  "80": "Plasma-Arc-Energy-Strip-Clothing"
 };
