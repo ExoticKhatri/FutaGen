@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Dock from '@/components/Dock';
 import Sidebar from '@/components/Sidebar';
 import CanvasView from '@/components/CanvasView';
-import { generateFinalSystemPrompt } from '@/utils/promptGen';
+import { generateAIReadyPrompt } from '@/utils/promptGen';
 import { refinePromptWithAI } from '@/actions/promptRefiner';
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
     } else {
       // We generate the prompt once here. 
       // The user can then override it in the CanvasView.
-      const finalFullPrompt = generateFinalSystemPrompt(newTraits);
+      const finalFullPrompt = generateAIReadyPrompt(newTraits);
       setSystemPrompt(finalFullPrompt);
     }
   };

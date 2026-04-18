@@ -64,4 +64,5 @@ export const hornTraits: Record<string, string> = {
   "48": "Porous Sponge-like",
   "49": "Deep Sea Coral",
   "50": "Vibrating Sound-wave Energy",
+  "51": "No horns"
 };
