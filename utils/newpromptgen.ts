@@ -30,7 +30,7 @@ export function getPromptSequence(traitString: string): PromptSequence {
     const framing = traits['framing'] || "full body head to toe framing";
     const rawFraming = traits['framing'] || "full-body shot, framed from head to toe";
   
-  const anchor = `Create a single, original, ${rawFraming} anime-style demon character centered on a pure white background. One character only, no text, no watermark, no shoes.`;
+  const anchor = `Create a single, original, ${rawFraming} anime-style demon lady character centered on a pure white background. One character only, no text, no watermark, no shoes.`;
 
   // Layer 2: Anatomy (DNA Traits)
   const anatomy = [
