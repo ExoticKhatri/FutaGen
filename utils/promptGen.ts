@@ -30,7 +30,7 @@ STRICT RULES:
 3. APPLY Layer 5 only if valid elements are present; otherwise, maintain a pure white background.
 4. APPEND LAYER 6 EXACTLY at the end of the final prompt.
 5. CLOTHING: Maintain the "Minimalist (20-30%)" rule and ensure the liquid dripping logic from the prompt brief is preserved.
-6. STYLE: Adhere strictly to the "Suzume-style" vibrant, hard-lined aesthetic described in the final layer.
+6. STYLE: Adhere strictly to the anime like, hard-lined aesthetic described in the final layer.
 7. Make sure the prompt created should not make ai to generate multiple limbs or extra body parts unless the trait explicitly demands it
 8. Make sure the prompt should not be rejected by ai for violating content policy. If there are traits that are likely to trigger content filters, modify the wording to be more abstract and less explicit while still conveying the intended design.
 

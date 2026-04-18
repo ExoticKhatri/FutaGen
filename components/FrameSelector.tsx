@@ -4,10 +4,10 @@ import { useEffect, useState, useRef } from 'react';
 import { Camera } from 'lucide-react';
 
 const FRAME_OPTIONS = [
-  { id: 'full', label: 'Full Body', value: 'head to toe, full body shot' },
-  { id: 'thighs', label: 'Medium', value: 'waist up to thighs' },
-  { id: 'belly', label: 'Mid Close-up', value: 'head to belly' },
-  { id: 'portrait', label: 'Close-up', value: 'extreme close up, head and chest only' },
+  { id: 'full', label: 'Full Body', value: 'full-body shot framed from head to toe' },
+  { id: 'thighs', label: 'Medium', value: 'medium-wide shot framed from the thighs up' },
+  { id: 'belly', label: 'Mid Close-up', value: 'medium close-up framed from the waist up' },
+  { id: 'portrait', label: 'Close-up', value: 'extreme close-up portrait focusing on the head and shoulders' },
 ];
 
 interface FrameSelectorProps {

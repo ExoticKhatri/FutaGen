@@ -27,15 +27,10 @@ export function getPromptSequence(traitString: string): PromptSequence {
     const LIQUID_PROTOCOL = `Ground Protocol: A glossy, viscous, semi-translucent gooey liquid pools beneath the feet. The liquid is a vibrant, contrasting neon-ether hue, distinct from the character's skin and clothing colors. Thick droplets are seen dripping exclusively from the lowest folds and hemline of the garment, clinging to the fabric edges before falling. The substance features sharp, high-contrast specular highlights and realistic surface tension, appearing as a separate elemental fluid.`;
 
     // Layer 1: Anchor (Dynamic based on framing)
-  const framing = traits['framing'] || "full body head to toe framing";
-  const hornType = (traits['horn'] || "").toLowerCase();
+    const framing = traits['framing'] || "full body head to toe framing";
+    const rawFraming = traits['framing'] || "full-body shot, framed from head to toe";
   
-  // Logic: If there are horns (and it's not "No horns"), add the anti-cropping rule
-  const hornSafetyRule = (hornType && !hornType.includes("no horns")) 
-    ? " Ensure horns are fully visible and not cropped by the frame edges; maintain a safe margin at the top." 
-    : "";
-
-  const anchor = `Create a single, original, ${framing} anime-style demon character centered on a pure white background. One character only, no text, no watermark, no shoes.${hornSafetyRule}`;
+  const anchor = `Create a single, original, ${rawFraming} anime-style demon character centered on a pure white background. One character only, no text, no watermark, no shoes.`;
 
   // Layer 2: Anatomy (DNA Traits)
   const anatomy = [
