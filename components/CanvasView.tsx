@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Check, Terminal, FileText, BrainCircuit, Loader2 } from 'lucide-react';
 
 interface CanvasViewProps {
@@ -41,7 +41,7 @@ export default function CanvasView({
   const textareaClasses = "w-full h-full bg-transparent font-mono text-[13px] leading-relaxed outline-none resize-none custom-scrollbar pb-20";
 
   return (
-    <div className="w-full h-full flex flex-col animate-in fade-in duration-1000 bg-[#0A0A0A] border border-zinc-800/50 rounded-2xl overflow-hidden">
+    <div className="w-full h-full flex flex-col animate-in fade-in duration-1000 bg-[#0A0A0A] overflow-hidden">
       
       {/* Header */}
       <div className="flex justify-between items-center px-6 py-4 bg-zinc-900/20 border-b border-zinc-800/50 shrink-0">
@@ -62,7 +62,7 @@ export default function CanvasView({
               <tab.icon size={14} className={activeTab === tab.id ? (tab.id === 'ai' ? 'text-purple-400' : 'text-emerald-400') : ''} />
               <span className="text-[11px] font-medium tracking-wide uppercase">{tab.label}</span>
               {activeTab === tab.id && (
-                <div className={`absolute -bottom-[17px] left-0 right-0 h-px ${tab.id === 'ai' ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+                <div className={`absolute -bottom-4.25 left-0 right-0 h-px ${tab.id === 'ai' ? 'bg-purple-500' : 'bg-emerald-500'}`} />
               )}
             </button>
           ))}
