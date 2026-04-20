@@ -121,5 +121,5 @@ ADDITIONAL DIRECTION:
 - Use confident anime-art phrasing with strong line discipline, clean material separation, vivid color design, crisp cel shading, bold readable forms, and cinematic clarity.
 
 OUTPUT:
-Return a single, detailed final prompt which should be about 700 words long.`;
+Return a single, detailed final prompt which should be exactly 650-700 words long.`;
 }
