@@ -86,7 +86,7 @@ export function generateAIInstructionPrompt(data: TraitData): string {
 Your job is to convert the mapped character data below into one seamless, production-ready final image prompt for a single demon lady.
 
 STRICT RULES:
-1. Write one cohesive final prompt of about 600 words.
+1. Write one cohesive final prompt of about 600 words, which should always start like this "Create a single, original, ${data.frame} anime-style demon lady character centered on a pure white background. One character only, no text, no watermark, no shoes..
 2. Treat the mapped data and resolved trait descriptions as the source of truth. Do not invent contradictory features.
 3. The subject must always be exactly one demon lady and nothing else. Never describe multiple characters, twins, mirrored bodies, clones, reflections that read as a second person, or background figures.
 4. Respect the provided frame value exactly: ${data.frame}.

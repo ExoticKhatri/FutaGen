@@ -43,7 +43,7 @@ ${structuredContent}
 Use any provided reference images STRICTLY FOR ART INSPIRATION ONLY (line quality, shading discipline). Do not copy pose, anatomy, or identifiable design elements.
 
 OUTPUT:
-- A single, cohesive 700-word long detailed prompt that seamlessly integrates all 6 layers.
+- A single, cohesive 700-word long detailed prompt that seamlessly integrates all 6 layers and NOT A SINGLE WORD OTHER THEN THE PROMT.
 - The prompt should be clear, vivid, and optimized for generating a high-quality anime-style image based on the provided traits.
 
 `.trim();
