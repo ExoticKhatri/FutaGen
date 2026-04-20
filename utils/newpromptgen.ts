@@ -53,7 +53,7 @@ export function getPromptSequence(traitString: string): PromptSequence {
   
   // Apply Liquid Protocol only for full-length shots
   if (framing.includes("full body") || framing.includes("head to toe")) {
-    environment += ` ${LIQUID_PROTOCOL}`;
+    environment += ` `;
   } else {
     environment += "";
 }
