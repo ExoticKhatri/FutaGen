@@ -1,4 +1,9 @@
 import { getPromptSequence } from '@/utils/newpromptgen';
+import { GENERATOR_CONFIG } from '@/utils/config';
+
+const defaultAspectRatio = GENERATOR_CONFIG.aspectRatio.options.find(
+  (option) => option.id === GENERATOR_CONFIG.aspectRatio.default
+);
 
 /**
  * MASTER GENERATOR
@@ -34,6 +39,7 @@ STRICT RULES:
 7. ANATOMY SAFETY: The prompt must not cause the generation of multiple limbs or extra body parts unless explicitly requested in the traits.
 8. COMPLIANCE: If traits risk triggering content filters, use abstract or artistic descriptors to maintain the design intent while remaining within safety guidelines.
 9. ANATOMICAL CONTINUITY: For close-up or portrait framing, ensure the character's anatomy remains naturally integrated; the body should appear to continue realistically off-canvas rather than appearing as a severed or floating bust.
+10. TARGET ASPECT RATIO: Optimize the final prompt for a ${defaultAspectRatio?.promptLabel ?? 'vertical 9:16'} composition unless explicitly overridden elsewhere.
 STRUCTURED BRIEF TO CONVERT:
 
 ---

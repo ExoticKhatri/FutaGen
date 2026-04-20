@@ -9,7 +9,15 @@ export const GENERATOR_CONFIG = {
     maxLength: 64,
     base: 36, // 0-9, A-Z
   },
-}
+  aspectRatio: {
+    default: 'vertical',
+    options: [
+      { id: 'landscape', label: 'Landscape', value: '16:9', promptLabel: 'landscape 16:9' },
+      { id: 'vertical', label: 'Vertical', value: '9:16', promptLabel: 'vertical 9:16' },
+      { id: 'square', label: '1:1', value: '1:1', promptLabel: 'square 1:1' },
+    ] as const,
+  },
+};
 
 
 export const FRAME_CONFIG = {

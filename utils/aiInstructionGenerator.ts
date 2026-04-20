@@ -1,6 +1,6 @@
 import { displayLibrary as loreLibrary } from '@/data/lore';
 import { CategoryKey, TraitData } from '@/types/traits';
-import { TRAIT_CONFIG } from '@/utils/config';
+import { GENERATOR_CONFIG, TRAIT_CONFIG } from '@/utils/config';
 
 export interface ResolvedTraitDetail {
   key: string;
@@ -34,6 +34,10 @@ const frameGuidance: Record<TraitData['frame'], string> = {
   close: 'Compose a close-up portrait with the anatomy continuing naturally beyond the crop, never as a floating bust.',
   extreme: 'Compose an extreme close-up with strong facial presence while keeping the visible anatomy coherent and naturally connected off-canvas.',
 };
+
+const defaultAspectRatio = GENERATOR_CONFIG.aspectRatio.options.find(
+  (option) => option.id === GENERATOR_CONFIG.aspectRatio.default
+);
 
 function getLoreDescription(category: CategoryKey, id: string): string {
   const library = loreLibrary[category];
@@ -75,7 +79,7 @@ export function generateAIInstructionPrompt(data: TraitData): string {
   const resolvedTraits = resolveTraitDetails(data);
 
   const resolvedTraitBlock = resolvedTraits
-    .map((item) => `- ${item.label} (${item.key}) | id: ${item.id}\n  ${item.description}`)
+    .map((item) => `- ${item.label} (${item.key})\n  ${item.description}`)
     .join('\n');
 
   const specialRule = data.special?.length
@@ -97,9 +101,10 @@ STRICT RULES:
 9. Keep clothing visually minimal when the selected clothing trait suggests a sparse design, but describe it with tasteful, art-directed language.
 10. If a trait could trigger safety issues, keep the visual intent through abstract, stylized, or high-fashion phrasing rather than explicit wording.
 11. Use a pure white background unless the mapped pose or trait combination clearly requires a minimal environmental support element.
-12. The art direction must feel Suzume-like in energy: confident hard anime line art, clean decisive contours, visually vibrant color design, crisp cel-shaded separation, luminous atmospheric clarity, cinematic composition, and polished high-end illustration discipline.
-13. Emphasize elegant, readable shape language and high visual clarity over noisy rendering, painterly blur, sketchiness, or muddy textures.
-14. Do not output section headers, bullet points, JSON, or analysis. Output only the final image-generation prompt.
+12. Use the default aspect ratio of ${defaultAspectRatio?.promptLabel ?? 'vertical 9:16'} unless explicitly overridden elsewhere.
+13. The art direction must feel Suzume-like in energy: confident hard anime line art, clean decisive contours, visually vibrant color design, crisp cel-shaded separation, luminous atmospheric clarity, cinematic composition, and polished high-end illustration discipline.
+14. Emphasize elegant, readable shape language and high visual clarity over noisy rendering, painterly blur, sketchiness, or muddy textures.
+15. Do not output section headers, bullet points, JSON, or analysis. Output only the final image-generation prompt.
 
 TRAIT DESCRIPTIONS:
 ---
@@ -110,10 +115,11 @@ ADDITIONAL DIRECTION:
 - Interpret the mood, pose, face, eyes, and expression together so the character feels psychologically coherent.
 - Interpret body type, shoulders, chest, arms, waist, hips, and legs together so the physique reads as one believable design.
 - Interpret hair style, hair color, skin type, clothing, and special traits together so materials and color relationships stay intentional.
+- Keep the final composition optimized for a ${defaultAspectRatio?.promptLabel ?? 'vertical 9:16'} canvas.
 - ${specialRule}
 - The final prose should strongly reinforce that this is one visually striking demon lady rendered with confident anime linework and vibrant, cinematic clarity.
 - Use confident anime-art phrasing with strong line discipline, clean material separation, vivid color design, crisp cel shading, bold readable forms, and cinematic clarity.
 
 OUTPUT:
-Return a single, detailed final prompt of about 600 words for image generation AND NOT A SINGLE WORD MORE THEN THAT.`;
+Return a single, detailed final prompt which should be about 700 words long.`;
 }

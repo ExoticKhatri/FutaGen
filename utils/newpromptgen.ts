@@ -1,5 +1,7 @@
 // utils/newpromptgen.ts
 
+import { GENERATOR_CONFIG } from '@/utils/config';
+
 export interface PromptSequence {
   anchor: string;
   anatomy: string;
@@ -23,6 +25,9 @@ function parseTraits(traitString: string): Record<string, string> {
 
 export function getPromptSequence(traitString: string): PromptSequence {
   const traits = parseTraits(traitString);
+  const defaultAspectRatio = GENERATOR_CONFIG.aspectRatio.options.find(
+    (option) => option.id === GENERATOR_CONFIG.aspectRatio.default
+  );
 
     const LIQUID_PROTOCOL = `Ground Protocol: A glossy, viscous, semi-translucent gooey liquid pools beneath the feet. The liquid is a vibrant, contrasting neon-ether hue, distinct from the character's skin and clothing colors. Thick droplets are seen dripping exclusively from the lowest folds and hemline of the garment, clinging to the fabric edges before falling. The substance features sharp, high-contrast specular highlights and realistic surface tension, appearing as a separate elemental fluid.`;
 
@@ -60,7 +65,7 @@ export function getPromptSequence(traitString: string): PromptSequence {
     
 
   // Layer 6: The Finish (Vibrant "Suzume" Style)
-  const finish = `Masterpiece Quality: Suzume-style aesthetic, ultra-vibrant color palette, cinematic lighting, sharp-edged cel shading, confident hard linework, strong anatomy, clear material separation, high-clarity finish, vertical ratio, no painterly blur.`;
+  const finish = `Masterpiece Quality: Suzume-style aesthetic, ultra-vibrant color palette, cinematic lighting, sharp-edged cel shading, confident hard linework, strong anatomy, clear material separation, high-clarity finish, ${defaultAspectRatio?.promptLabel ?? 'vertical 9:16'} ratio, no painterly blur.`;
 
   return {
     anchor,
