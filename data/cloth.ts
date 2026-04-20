@@ -95,5 +95,28 @@ export const clothTraits: Record<string, string> = {
   "77": "Melting-Wax-Appearance-Fabric",
   "78": "Tapered-Feathered-Edge-Silk",
   "79": "Venomous-Green-Glow-Slime-Cloth",
-  "80": "Plasma-Arc-Energy-Strip-Clothing"
+  "80": "Plasma-Arc-Energy-Strip-Clothing",
+
+  // --- Deep Shadow & Void Minimal (81-90) ---
+  "81": "Shadow-Tendrils-Wrapping-Waist-Only",
+  "82": "Void-Black-Silky-Hip-Band",
+  "83": "Obsidian-Fragment-Body-Drape",
+  "84": "Night-Silk-Minimal-Chest-Wraps",
+  "85": "Charcoal-Smoke-Thin-Bands",
+  "86": "Darkness-Clinging-Fabric-Strips",
+  "87": "Inky-Gossamer-Minimal-Wrap",
+  "88": "Void-Whisper-Chest-Patch",
+  "89": "Shadowed-Silk-Thigh-Accents",
+  "90": "Ebon-Thread-Binding-Minimal",
+
+  // --- Infernal & Demonic Heat (91-99) ---
+  "91": "Ember-Glow-Crotch-Only-Guard",
+  "92": "Hellfire-Thin-Strap-System",
+  "93": "Lava-Flow-Hip-Accent-Only",
+  "94": "Infernal-Silk-Chest-Minimal",
+  "95": "Molten-Chain-Loop-Lower-Only",
+  "96": "Hellish-Lace-Hip-Coverage",
+  "97": "Demonic-Runic-Band-Minimal",
+  "98": "Flame-Whisper-Binding-Straps",
+  "99": "Succubus-Ceremonial-Minimal-Silk"
 };
