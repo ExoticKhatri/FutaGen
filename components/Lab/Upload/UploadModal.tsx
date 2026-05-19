@@ -36,7 +36,8 @@ export default function UploadModal({
             <h2 className="text-xs font-bold text-white uppercase tracking-widest">Add New Records</h2>
             <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Target_Table: <span className="text-teal-500">{activeTable}</span></p>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white transition-colors rounded-md hover:bg-white/5 active:scale-95">
+          <button onClick={onClose}
+          aria-label="close"  className="p-2 text-zinc-500 hover:text-white transition-colors rounded-md hover:bg-white/5 active:scale-95">
             <X size={16} />
           </button>
         </div>
@@ -65,9 +66,9 @@ export default function UploadModal({
 
         {/* Body */}
         <div className="p-5 bg-[#0a0a0a]">
-          {activeTab === "manual" && <ManualUpload activeTable={activeTable} onSuccess={onClose} />}
-          {activeTab === "json" && <JsonUpload activeTable={activeTable} onSuccess={onClose} />}
-          {activeTab === "ai" && <AiUpload activeTable={activeTable} onSuccess={onClose} />}
+          {activeTab === "manual" && <ManualUpload activeTable={activeTable} onSuccess={onClose ?? (() => {})} />}
+          {activeTab === "json" && <JsonUpload activeTable={activeTable} onSuccess={onClose ?? (() => {})} />}
+          {activeTab === "ai" && <AiUpload activeTable={activeTable} onSuccess={onClose ?? (() => {})} />}
         </div>
       </div>
     </div>

@@ -21,11 +21,12 @@ export default function SystemTab({ state }: SystemTabProps) {
 
   // 1. Resolve Database Descriptions
   const resolveTraits = async () => {
+    if (!state.traits) return;
     setLoading(true);
     const resolved: Record<string, string | string[]> = {};
     try {
       const promises = TRAIT_CATEGORIES.map(async (category) => {
-        const val = state.traits[category];
+        const val = state.traits![category];
         if (category === 'special' && Array.isArray(val)) {
           const results = await Promise.all(val.map(async (v) => {
             const { data } = await fetchSpecificEntryColumn(category, 'description', v);
