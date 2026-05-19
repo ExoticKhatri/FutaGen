@@ -1,0 +1,302 @@
+[
+  {
+    "table_name": "body",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "body",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "body",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "body",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "body",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "eyes",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "eyes",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "eyes",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "eyes",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "eyes",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "face",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "face",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "face",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "face",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "face",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "hair",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "hair",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "hair",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "hair",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "hair",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "horns",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "horns",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "horns",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "horns",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "horns",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "mood",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "mood",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "mood",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "mood",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "mood",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "outfit",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "outfit",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "outfit",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "outfit",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "outfit",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "pose",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "pose",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "pose",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "pose",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "pose",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "skin",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "skin",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "skin",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "skin",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "skin",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "special",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "special",
+    "column_name": "base10_map",
+    "data_type": "bigint",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "special",
+    "column_name": "base36_map",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "special",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "special",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO"
+  }
+]

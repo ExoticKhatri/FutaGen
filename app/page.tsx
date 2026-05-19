@@ -1,65 +1,126 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useRef, useCallback } from 'react';
+import ViewPanel from '@/components/ViewPanel';
+import ControlPanel from '@/components/ControlPanel';
+import Dock from '@/components/Dock';
+import {
+  GeneratorState,
+  INITIAL_GENERATOR_STATE,
+  ImageGenState,
+  INITIAL_IMAGE_GEN_STATE,
+} from '@/types/data';
+import { TraitCategory, TRAIT_CATEGORIES } from '@/types/traits';
+import { fetchSpecificEntryColumn } from '@/actions/db_fetch';
+import { generateMasterPrompt } from '@/actions/ai/promptGen';
+import { generateImage } from '@/actions/ai/imageGen';
+import { GENERATOR_CONFIG } from '@/lib/config';
+
+const MAX_RETRIES = 4;
 
 export default function Home() {
+  const seedEditorRef = useRef<{ triggerRandomize: () => void } | null>(null);
+  const [genState, setGenState] = useState<GeneratorState>(INITIAL_GENERATOR_STATE);
+  const [imageGenState, setImageGenState] = useState<ImageGenState>(INITIAL_IMAGE_GEN_STATE);
+
+  const randomSeedGen = () => seedEditorRef.current?.triggerRandomize();
+
+  const isGenerating = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
+
+  const handleGenerate = useCallback(async () => {
+    if (!genState.traits) return;
+
+    // ── Step 1: Fetch trait descriptions ──────────────────────────────────
+    setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, attempt: 0 });
+
+    const descriptions: Record<string, string | string[]> = {};
+    try {
+      await Promise.all(
+        TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
+          const val = genState.traits![category];
+          if (category === 'special' && Array.isArray(val)) {
+            const results = await Promise.all(
+              val.map(async (v) => {
+                const { data } = await fetchSpecificEntryColumn(category, 'description', v);
+                return data as string;
+              })
+            );
+            descriptions[category] = results.filter(Boolean);
+          } else if (typeof val === 'string' && val) {
+            const { data } = await fetchSpecificEntryColumn(category, 'description', val);
+            descriptions[category] = (data as string) || '';
+          }
+        })
+      );
+    } catch {
+      setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
+      return;
+    }
+
+    // ── Step 2: Generate master prompt ────────────────────────────────────
+    setImageGenState(s => ({ ...s, status: 'generating_prompt', message: 'Assembling master prompt with AI...' }));
+
+    const styleData  = GENERATOR_CONFIG.ART_STYLES.find(s => s.id === genState.style);
+    const compData   = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
+    const frameData  = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
+
+    const promptResult = await generateMasterPrompt({
+      composition:      compData?.label        || genState.composition,
+      frame:            frameData?.ratio        || genState.frame,
+      styleDescription: styleData?.description || genState.style,
+      traits:           descriptions,
+    });
+
+    if (!promptResult.success || !promptResult.prompt) {
+      setImageGenState(s => ({ ...s, status: 'error', message: 'AI prompt generation failed.' }));
+      return;
+    }
+
+    const prompt = promptResult.prompt;
+
+    // ── Step 3: Generate image with up to MAX_RETRIES attempts ────────────
+    setImageGenState(s => ({ ...s, status: 'generating_image', message: `Generating image — attempt 1 / ${MAX_RETRIES}...`, prompt, attempt: 1 }));
+
+    let lastError = '';
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 1) {
+        setImageGenState(s => ({ ...s, message: `Retrying — attempt ${attempt} / ${MAX_RETRIES}...`, attempt }));
+      }
+
+      const result = await generateImage(prompt, genState.frame);
+
+      if (result.success && result.imageUrl) {
+        setImageGenState({ status: 'done', message: 'Image generated successfully.', imageUrl: result.imageUrl, prompt, attempt });
+        return;
+      }
+
+      lastError = result.error || 'Unknown error';
+    }
+
+    setImageGenState(s => ({ ...s, status: 'error', message: `Failed after ${MAX_RETRIES} attempts. Last error: ${lastError}` }));
+  }, [genState]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="relative flex flex-col md:flex-row h-screen w-full bg-background text-foreground overflow-y-auto md:overflow-hidden">
+
+      <aside className="w-full md:w-[30%] p-2 h-screen bg-panel border-b md:border-b-0 md:border-r border-white/5 flex flex-col">
+        <ViewPanel state={genState} imageGenState={imageGenState} />
+      </aside>
+
+      <section className="w-full md:w-[70%] h-full p-8 bg-background">
+        <ControlPanel
+          seedEditorRef={seedEditorRef}
+          onUpdate={setGenState}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <div className="fixed md:absolute bottom-6 left-1/2 -translate-x-1/2 z-100 w-max">
+        <Dock
+          onDiceClick={randomSeedGen}
+          onGenerateClick={handleGenerate}
+          generating={isGenerating}
+        />
+      </div>
+    </main>
   );
 }
