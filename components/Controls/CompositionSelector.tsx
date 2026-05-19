@@ -13,7 +13,7 @@ export default function CompositionSelector({ activeId, setComp, disable = false
     <div className="space-y-3 h-full flex flex-col">
       <div className="flex items-center justify-between px-1 shrink-0">
         <div className="flex items-center gap-2 text-zinc-500">
-          <Layout size={14} className="text-accent" />
+          <Layout size={12} className={disable ? "text-zinc-600" : "text-accent"} />
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">VIew Composition</span>
         </div>
       </div>

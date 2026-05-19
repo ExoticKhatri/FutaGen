@@ -13,7 +13,7 @@ export default function ArtStyleSelector({ activeId, setStyle, disable = false }
     <section className="space-y-3 w-full">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Palette size={14} className='text-accent' />
+          <Palette size={12} className={disable ? "text-zinc-600" : "text-accent"} />
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Aesthetic DNA</span>
         </div>
       </div>
@@ -28,7 +28,7 @@ export default function ArtStyleSelector({ activeId, setStyle, disable = false }
               disabled={disable}
               onClick={() => setStyle(style.id)}
               className={`
-                relative flex-1 min-w-[110px] py-3 rounded-lg border transition-all duration-300
+                relative flex-1 min-w-27.5 py-3 rounded-lg border transition-all duration-300
                 flex items-center justify-center overflow-hidden
                 ${isActive 
                   ? 'bg-teal-500/5 border-teal-500/40 text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.1)]' 

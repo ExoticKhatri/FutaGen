@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { Sliders } from 'lucide-react';
 import { TraitCategory, TraitVariant, TRAIT_CATEGORIES } from '@/types/traits';
 import { fetchSpecificColumnsFromAllTables } from '@/actions/db_fetch';
 import {
@@ -178,65 +179,47 @@ export default function TraitGrid({ seed, onSeedChange, onResolvedTraits, onReso
     return <div className="animate-pulse text-[10px] text-white/20">LOADING_GENOME...</div>;
   }
 
+  const specialVariants = library['special'] ?? [];
+  const specialOptions: DropdownOption[] = [
+    { value: '', label: '00 — NONE_SELECTED' },
+    ...variantsToOptions(specialVariants),
+  ];
+
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
 
-      {/* ANATOMICAL TRAITS */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <span className="text-[10px] text-accent/60 font-bold tracking-[0.4em] whitespace-nowrap">
-            ANATOMICAL_TRAITS
-          </span>
-          <div className="h-px w-full bg-white/5" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {STANDARD_CATS.map(cat => {
-            const variants = library[cat] ?? [];
-            const options  = variantsToOptions(variants);
-
-            return (
-              <TraitDropdown
-                key={cat}
-                label={cat}
-                value={resolvedValues[cat] ?? ''}
-                options={options.length ? options : [{ value: '', label: '— NO DATA —' }]}
-                onChange={val => handleStandardChange(cat, val)}
-                disabled={disabled}
-              />
-            );
-          })}
-        </div>
+      <div className="flex items-center gap-2 px-1">
+        <Sliders size={12} className={disabled ? 'text-zinc-600' : 'text-accent'} />
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Trait Configuration</span>
       </div>
 
-      {/* SUPERNATURAL AUGMENTS (special / toggleable) */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <span className="text-[10px] text-accent/40 font-bold tracking-[0.4em] whitespace-nowrap">
-            SUPERNATURAL_AUGMENTS
-          </span>
-          <div className="h-px w-full bg-white/5" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[0, 1, 2].map(idx => {
-            const variants = library['special'] ?? [];
-            const options: DropdownOption[] = [
-              { value: '', label: '00 — NONE_SELECTED' },
-              ...variantsToOptions(variants),
-            ];
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {STANDARD_CATS.map(cat => {
+          const variants = library[cat] ?? [];
+          const options  = variantsToOptions(variants);
+          return (
+            <TraitDropdown
+              key={cat}
+              label={cat}
+              value={resolvedValues[cat] ?? ''}
+              options={options.length ? options : [{ value: '', label: '— NO DATA —' }]}
+              onChange={val => handleStandardChange(cat, val)}
+              disabled={disabled}
+            />
+          );
+        })}
 
-            return (
-              <TraitDropdown
-                key={`spec-${idx}`}
-                label={`SPECIAL_0${idx + 1}`}
-                value={resolvedValues[`special_${idx}`] ?? ''}
-                options={options}
-                onChange={val => handleSpecialChange(idx, val)}
-                disabled={disabled}
-                accent
-              />
-            );
-          })}
-        </div>
+        {[0, 1, 2].map(idx => (
+          <TraitDropdown
+            key={`spec-${idx}`}
+            label={`SPECIAL_0${idx + 1}`}
+            value={resolvedValues[`special_${idx}`] ?? ''}
+            options={specialOptions}
+            onChange={val => handleSpecialChange(idx, val)}
+            disabled={disabled}
+            accent
+          />
+        ))}
       </div>
 
     </div>

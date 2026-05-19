@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import { Layout, Terminal, FileCode, Wand2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Layout, Terminal, Wand2, Upload, RefreshCw, AlertCircle, Copy, Check } from 'lucide-react';
 import { GeneratorState, ImageGenState } from '@/types/data';
-import { TRAIT_CATEGORIES } from '@/types/traits';
 import LogsTab from '@/components/Tabs/LogTab';
-import SystemTab from '@/components/Tabs/SystemTab';
+import UploadTab from '@/components/Tabs/UploadTab';
 
-type TabType = 'view' | 'logs' | 'system' | 'final';
+type TabType = 'view' | 'logs' | 'final' | 'upload';
 
 interface ViewPanelProps {
   state: GeneratorState;
@@ -23,16 +22,25 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('view');
+  const [activeTab, setActiveTab]   = useState<TabType>('view');
+  const [copied, setCopied]         = useState(false);
 
   const tabs = [
     { id: 'view',   label: 'View',   icon: Layout   },
     { id: 'logs',   label: 'Logs',   icon: Terminal  },
-    { id: 'system', label: 'System', icon: FileCode  },
-    { id: 'final',  label: 'Final',  icon: Wand2     },
+    { id: 'final',  label: 'Prompt', icon: Wand2     },
+    { id: 'upload', label: 'Upload', icon: Upload    },
   ];
 
   const isRunning = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
+
+  const copyPrompt = () => {
+    const text = imageGenState.prompt;
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="flex flex-col h-full uppercase tracking-widest overflow-hidden">
@@ -70,118 +78,100 @@ export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
 
           {/* ── VIEW TAB ──────────────────────────────────────────────── */}
           {activeTab === 'view' && (
-            <div className="flex flex-col gap-4 h-full">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
 
-              {/* Trait summary grid */}
-              {state.traitTitles && (
-                <div className="shrink-0">
-                  <p className="text-[8px] text-white/20 mb-2 tracking-[0.3em]">CHARACTER_BUILD</p>
-                  <div className="grid grid-cols-2 gap-1">
-                    {TRAIT_CATEGORIES.filter(c => c !== 'special').map(cat => {
-                      const title = state.traitTitles?.[cat] as string | undefined;
-                      if (!title) return null;
-                      return (
-                        <div key={cat} className="flex gap-2 px-2 py-1.5 bg-white/[0.02] border border-white/5">
-                          <span className="text-[7px] text-accent/50 uppercase w-10 shrink-0 pt-px">{cat}</span>
-                          <span className="text-[8px] text-white/50 normal-case truncate">{title}</span>
-                        </div>
-                      );
-                    })}
-                    {/* Special augments */}
-                    {(state.traitTitles?.special as string[] | undefined)?.map((t, i) => (
-                      <div key={`spec-${i}`} className="flex gap-2 px-2 py-1.5 bg-white/[0.02] border border-accent/10">
-                        <span className="text-[7px] text-accent/40 uppercase w-10 shrink-0 pt-px">aug_{i + 1}</span>
-                        <span className="text-[8px] text-white/50 normal-case truncate">{t}</span>
-                      </div>
-                    ))}
+              {imageGenState.status === 'idle' && (
+                <div className="flex flex-col items-center opacity-30">
+                  <div className="w-32 h-52 border border-white/10 flex items-center justify-center">
+                    <span className="text-[8px] rotate-90 tracking-[1em]">SILHOUETTE</span>
                   </div>
+                  <p className="mt-4 text-[9px]">AWAITING_RENDER_PIPELINE</p>
                 </div>
               )}
 
-              {/* Image / status area */}
-              <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-
-                {/* Idle */}
-                {imageGenState.status === 'idle' && (
-                  <div className="flex flex-col items-center opacity-30">
-                    <div className="w-32 h-52 border border-white/10 flex items-center justify-center">
-                      <span className="text-[8px] rotate-90 tracking-[1em]">SILHOUETTE</span>
-                    </div>
-                    <p className="mt-4 text-[9px]">AWAITING_RENDER_PIPELINE</p>
-                  </div>
-                )}
-
-                {/* Running */}
-                {isRunning && (
-                  <div className="flex flex-col items-center gap-3 text-center px-2">
-                    <RefreshCw size={20} className="animate-spin text-accent" />
-                    <p className="text-[9px] text-accent tracking-widest">
+              {isRunning && (
+                <div className="flex flex-col items-center gap-4 text-center px-4">
+                  <RefreshCw size={22} className="animate-spin text-accent" />
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-accent tracking-[0.3em]">
                       {STATUS_LABELS[imageGenState.status] ?? imageGenState.status}
                     </p>
-                    <p className="text-[8px] text-white/40 normal-case leading-relaxed">
-                      {imageGenState.message}
-                    </p>
-                    {imageGenState.attempt > 0 && (
-                      <p className="text-[8px] text-white/20">
-                        ATTEMPT {imageGenState.attempt} / 4
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Error */}
-                {imageGenState.status === 'error' && (
-                  <div className="flex flex-col items-center gap-3 text-center px-2">
-                    <AlertCircle size={20} className="text-red-400/70" />
-                    <p className="text-[9px] text-red-400/70 tracking-widest">PIPELINE_ERROR</p>
-                    <p className="text-[8px] text-white/30 normal-case leading-relaxed">
+                    <p className="text-[9px] text-white/40 normal-case leading-relaxed">
                       {imageGenState.message}
                     </p>
                   </div>
-                )}
+                  {imageGenState.attempt > 0 && (
+                    <p className="text-[8px] text-white/20 tracking-widest">
+                      ATTEMPT {imageGenState.attempt} / 4
+                    </p>
+                  )}
+                </div>
+              )}
 
-                {/* Done */}
-                {imageGenState.status === 'done' && imageGenState.imageUrl && (
-                  <div className="w-full flex flex-col gap-2">
-                    <p className="text-[8px] text-accent/60 tracking-widest">RENDER_OUTPUT</p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageGenState.imageUrl}
-                      alt="Generated demon lady character"
-                      className="w-full h-auto border border-white/10"
-                    />
-                  </div>
-                )}
+              {imageGenState.status === 'error' && (
+                <div className="flex flex-col items-center gap-3 text-center px-4">
+                  <AlertCircle size={22} className="text-red-400/60" />
+                  <p className="text-[10px] text-red-400/70 tracking-[0.3em]">PIPELINE_ERROR</p>
+                  <p className="text-[9px] text-white/30 normal-case leading-relaxed break-all">
+                    {imageGenState.message}
+                  </p>
+                </div>
+              )}
 
-              </div>
+              {imageGenState.status === 'done' && imageGenState.imageUrl && (
+                <div className="w-full flex flex-col gap-2">
+                  <p className="text-[8px] text-accent/60 tracking-widest">RENDER_OUTPUT</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageGenState.imageUrl}
+                    alt="Generated demon lady character"
+                    className="w-full h-auto border border-white/10"
+                  />
+                  {imageGenState.message && (
+                    <p className="text-[8px] text-white/25 normal-case">{imageGenState.message}</p>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
 
           {/* ── LOGS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'logs' && <LogsTab state={state} />}
 
-          {/* ── SYSTEM TAB ────────────────────────────────────────────── */}
-          {activeTab === 'system' && <SystemTab state={state} />}
-
-          {/* ── FINAL TAB ─────────────────────────────────────────────── */}
+          {/* ── FINAL PROMPT TAB ──────────────────────────────────────── */}
           {activeTab === 'final' && (
             <div className="flex flex-col gap-4">
-              <p className="text-[10px] text-accent">GENERATED_PROMPT_V1</p>
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <p className="text-[10px] text-accent">MASTER_PROMPT</p>
+                {imageGenState.prompt && (
+                  <button
+                    type="button"
+                    onClick={copyPrompt}
+                    title="Copy prompt"
+                    className="flex items-center gap-1.5 px-2 py-1 text-white/30 hover:text-accent transition-colors border border-white/10 hover:border-accent/30"
+                  >
+                    {copied ? <Check size={11} /> : <Copy size={11} />}
+                    <span className="text-[8px] font-bold">{copied ? 'COPIED' : 'COPY'}</span>
+                  </button>
+                )}
+              </div>
+
               {imageGenState.prompt ? (
-                <div className="p-4 bg-white/[0.03] border border-white/5 text-[10px] text-white/70 normal-case leading-relaxed">
-                  &quot;{imageGenState.prompt}&quot;
-                </div>
+                <p className="text-[10px] text-white/60 normal-case leading-relaxed">
+                  {imageGenState.prompt}
+                </p>
               ) : (
-                <div className="p-4 bg-white/[0.03] border border-white/5 text-[10px] text-white/70 normal-case leading-relaxed">
-                  &quot;A hyper-detailed {state.style} demon lady, {state.composition} composition, in {state.frame} aspect ratio, seed:{state.seed}&quot;
-                </div>
+                <p className="text-[9px] text-white/20 italic normal-case leading-relaxed">
+                  No prompt generated yet. Press Generate to create one.
+                </p>
               )}
-              <p className="text-[8px] text-white/20 italic">
-                {imageGenState.prompt
-                  ? 'AI-generated master prompt. Press Generate to create a new image.'
-                  : 'Note: Press Generate to build the full descriptive prompt.'}
-              </p>
             </div>
+          )}
+
+          {/* ── UPLOAD TAB ────────────────────────────────────────────── */}
+          {activeTab === 'upload' && (
+            <UploadTab state={state} imageGenState={imageGenState} />
           )}
 
         </div>

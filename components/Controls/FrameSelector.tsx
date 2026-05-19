@@ -15,11 +15,10 @@ export default function FrameSelector({ activeId, setFrame, disable = false }: F
     <section className="space-y-3 w-full">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2 ">
-          <Wind size={14} className="text-accent" />
+          <Wind size={12} className={disable ? "text-zinc-600" : "text-accent"} />
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Image Ratio</span>
         </div>
       </div>
-
       <div className="flex flex-row gap-2 overflow-x-auto pb-2 custom-scrollbar">
         {GENERATOR_CONFIG.FRAMES.map((f) => {
           const isActive = activeId === f.id;
@@ -30,7 +29,7 @@ export default function FrameSelector({ activeId, setFrame, disable = false }: F
               disabled={disable}
               onClick={() => setFrame(f.id)}
               className={`
-                relative flex-1 min-w-[80px] py-2.5 rounded-lg border transition-all duration-300
+                relative flex-1 min-w-20 py-2.5 rounded-lg border transition-all duration-300
                 flex flex-col items-center justify-center gap-1 overflow-hidden
                 ${isActive 
                   ? 'bg-teal-500/5 border-teal-500/40 text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.1)]' 
