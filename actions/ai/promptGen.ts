@@ -2,8 +2,6 @@
 
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 interface PromptRequest {
   composition:        string;
   frame:              string;
@@ -15,55 +13,104 @@ interface PromptRequest {
 
 // ── Style-specific quality tail tags ─────────────────────────────────────────
 
-const STYLE_TAIL: Record<string, string> = {
-  glistening_anime:
-    "Masterpiece Quality: Modern premium anime illustration, sleek glistening style, " +
-    "perfectly crisp and bold clean black digital outlines (crisp line art, NOT sketchy), " +
-    "rich cel-shading with soft internal gradients, high-specular reflective glossy highlights " +
-    "on skin, hair, and eyes. Saturated vibrant colors, wet glistening sheen, highly defined " +
-    "dripping liquid/slime/viscous elements with glossy shine and glass-like transparency, " +
-    "extremely clean and sharp professional digital illustration quality. Pure white background.",
-  anime_suzume:
-    "Masterpiece Quality: Makoto Shinkai / Suzume-style anime, soft luminous cel shading " +
-    "with smooth gradient transitions, clean precise linework with gentle weight variation " +
-    "(NOT harsh or thick outlines), high-saturation vibrant color palette with warm cinematic " +
-    "light bloom, soft skin highlights, subtle ambient glow, clear material separation. " +
-    "NOT dark comic style. NOT gritty. Soft, luminous, clean.",
-  watercolor:
-    "Masterpiece Quality: soft watercolor fantasy illustration, flowing paint washes, " +
-    "visible paper texture, delicate color bleeding at edges, " +
-    "loose expressive brushwork with clean ink outlines, Japanese fantasy illustration quality.",
-  comic_ink:
-    "Masterpiece Quality: western comic book style, bold confident ink outlines, " +
-    "dynamic line weight variation, flat color fills with solid black shadows, " +
-    "strong graphic composition, high contrast, professional comic art quality.",
-  concept_sketch:
-    "Masterpiece Quality: technical concept art, pure black ink linework, " +
-    "clean silhouette, zero shading, professional character design sheet finish.",
-  ultra_realistic:
-    "Masterpiece Quality: hyper-realistic photography, 85mm lens f/1.8, " +
-    "visible skin texture, Chiaroscuro lighting, 8K resolution, cinematic color grading.",
-};
+interface StyleConfig {
+  tail: string;
+  reference: string;
+  guidelines: string;
+}
 
-// ── Reference prompt template (Glistening Anime style) ───────────────────────
-// This is the gold-standard structure the AI must follow for all styles.
-
-const REFERENCE_EXAMPLE = `
-TARGET AESTHETIC — the final image must look like this description:
-A sleek, professional anime character standing on a pure white background. Her skin is rendered with detailed,
-smooth cel-shading and rich color gradients, adorned with realistic glossy highlights and a wet, reflective glistening sheen.
-Her linework consists of bold, perfectly clean black outlines that are extremely sharp and crisp digital line-art with zero sketchiness.
-Colors are highly saturated, vivid, and beautifully intense. Her hair has highly detailed glossy highlights and reflections suggesting a polished,
-almost liquid volume. Her minimal outfit is rendered with clean fabric folds, accompanied by highly defined dripping liquid, slime, or viscous
-elements that glisten under cinematic light, showcasing glossy highlights and transparent glass-like properties.
+const STYLE_CONFIGS: Record<string, StyleConfig> = {
+  glistening_anime: {
+    tail: "Masterpiece Quality: Modern premium anime illustration, sleek glistening style, perfectly crisp and bold clean black digital outlines (crisp line art, NOT sketchy), rich cel-shading with soft internal gradients, high-specular reflective glossy highlights on skin, hair, and eyes. Saturated vibrant colors, wet glistening sheen, highly defined dripping liquid/slime/viscous elements with glossy shine and glass-like transparency, extremely clean and sharp professional digital illustration quality. Pure white background.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A sleek, professional anime character standing on a pure white background. Her skin is rendered with detailed, smooth cel-shading and rich color gradients, adorned with realistic glossy highlights and a wet, reflective glistening sheen. Her linework consists of bold, perfectly clean black outlines that are extremely sharp and crisp digital line-art with zero sketchiness. Colors are highly saturated, vivid, and beautifully intense. Her hair has highly detailed glossy highlights and reflections suggesting a polished, almost liquid volume. Her minimal outfit is rendered with clean fabric folds, accompanied by highly defined dripping liquid, slime, or viscous elements that glisten under cinematic light, showcasing glossy highlights and transparent glass-like properties.
 The overall impression is: sleek, polished, glistening, high-contrast, modern anime illustration.
-NOT: sketchy lines, messy outlines, loose painterly washes, gritty textures, faded color palettes, realistic human photography.
-`;
+NOT: sketchy lines, messy outlines, loose painterly washes, gritty textures, faded color palettes, realistic human photography.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "bold clean black digital outlines", "crisp line art", "highly reflective glistening highlights", "glossy skin", "wet glistening sheen", "glass-like transparency", "vibrant saturated colors", "rich cel-shading with soft internal gradients", "perfectly sharp professional digital illustration".
+- AVOID: "sketchy lines", "fuzzy edges", "dark gritty comic book style", "loose paint washes", "watercolor blending".`
+  },
+  anime_suzume: {
+    tail: "Masterpiece Quality: Makoto Shinkai / Suzume-style anime, soft luminous cel shading with smooth gradient transitions, clean precise linework with gentle weight variation (NOT harsh or thick outlines), high-saturation vibrant color palette with warm cinematic light bloom, soft skin highlights, subtle ambient glow, clear material separation. NOT dark comic style. NOT gritty. Soft, luminous, clean.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A breathtaking, cinematic anime character illustration in the signature style of Makoto Shinkai. The character stands against a clean, atmospheric background. The entire scene is bathed in a luminous, warm cinematic light bloom, creating a soft and emotional mood. The linework is extremely thin, clean, and delicate, with gentle weight variation that feels hand-drawn yet incredibly precise. Shading is a beautiful blend of soft-edged cel shading and gorgeous ambient light gradients. Colors are vibrant and highly saturated but natural, featuring warm golden hours, skies, or atmospheric lens flares. Skin and hair are detailed with soft, gentle specular highlights and subtle rim lighting, evoking a feeling of warm sunlight filtering through.
+The overall impression is: soft, luminous, atmospheric, cinematic, clean, warm, and emotionally resonant.
+NOT: thick black outlines, heavy cel shading, high-gloss wet textures, dark comic shadows, gritty textures, hand-painted watercolor bleeding.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "thin precise hand-drawn linework", "soft luminous cel shading", "cinematic light bloom", "warm golden hour atmosphere", "glowing highlights", "soft skin gradients", "highly saturated but natural colors", "atmospheric lens flares", "emotional key visual aesthetics".
+- AVOID: "bold clean black outlines", "thick outlines", "dripping liquid", "wet glistening sheen", "harsh high-contrast shadows", "heavy black ink", "rough sketchy lines".`
+  },
+  retro_90s_anime: {
+    tail: "Masterpiece Quality: Retro 1990s anime aesthetic, hand-painted cel animation look, subtle film grain, warm chromatic aberration, soft focus, dark charcoal hand-inked line art with natural weight variations, classic geometric triangle highlights on hair, vintage analog animation cell textures. Pure white background.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A classic, nostalgic 1990s hand-painted cel anime character standing on a pure white background. The visual style has a distinct analog feel, complete with subtle film grain, chromatic aberration, and a soft focus. Linework is done in dark charcoal hand-inked outlines with natural weight variations and slight hand-drawn imperfections. Shading consists of clean, retro hand-painted cel colors with distinct hard edges and simple two-tone shading. The color palette uses slightly warm, rich, yet naturally organic analog tones characteristic of vintage animation cells. Hair has classic geometric triangle highlight shapes, and eyes are drawn in the iconic detailed 90s style with large clean iris segments.
+The overall impression is: 1990s retro anime, hand-painted cel animation, nostalgia, vintage analog aesthetic.
+NOT: modern digital gradients, glossy wet surfaces, ultra-clean vector linework, photorealism, heavy 3D shading, neon glowing cyber-effects.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "vintage 1990s hand-painted cel animation aesthetic", "warm analog tones", "subtle film grain", "soft chromatic aberration", "hand-inked charcoal linework", "hard-edged cel shading", "classic geometric highlight shapes", "retro anime visual style".
+- AVOID: "modern digital gradients", "high-specular glistening highlights", "dripping slime", "vector line art", "halftone dot textures", "photorealism".`
+  },
+  classic_manga: {
+    tail: "Masterpiece Quality: Authentic black and white Japanese manga page, professional ink illustration, sharp black pen outlines, detailed halftone screentones, cross-hatching, solid black ink shadows, high-contrast monochrome, expressive ink eyes. Pure white background. ZERO COLOR.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A stunning, high-contrast professional black and white manga illustration page of a single character on a clean background. The entire artwork is rendered using only black ink, crisp white space, and detailed screentone dot patterns. Linework consists of highly detailed, sharp black pen strokes with beautiful line-weight variation. Shading is achieved through precise cross-hatching, solid black fills, and delicate halftone dot textures (screentones) of varying densities. There is no color whatsoever—only pure monochrome brilliance. Eyes are incredibly expressive with deep black ink details and high-contrast white reflections.
+The overall impression is: authentic black and white manga page, professional ink illustration, high-contrast monochrome.
+NOT: any form of color, digital color gradients, soft watercolor washes, realistic gray shading, photorealistic details.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "professional black and white manga page", "sharp black ink outlines", "detailed halftone screentones", "cross-hatching", "solid black ink shadows", "high-contrast monochrome", "expressive ink eyes".
+- AVOID: "color", "vibrant colors", "pastel", "digital gradients", "glistening highlights", "watercolor washes", "realistic gray shading", "photorealistic".`
+  },
+  comic_ink: {
+    tail: "Masterpiece Quality: western comic book style, bold confident ink outlines, dynamic line weight variation, flat color fills with solid black shadows, strong graphic composition, high contrast, professional comic art quality. Pure white background.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A bold and graphic western comic book style illustration on a pure white background. The character is defined by heavy, confident black ink brush strokes and outlines with dynamic line weight variation. Shading consists of stark black shadow fills (heavy inks) and clean flat color blocks with minimal gradients. Colors are punchy, highly saturated, and reminiscent of professional superhero and modern fantasy comic book graphic art.
+The overall impression is: bold graphic illustration, heavy comic book inks, high contrast, flat pop colors.
+NOT: soft anime gradients, glistening wet textures, watercolor washes, sketchy unrefined lines, realistic human photography.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "bold confident ink brush outlines", "heavy solid black shadows", "flat pop color fills", "high-contrast graphic composition", "professional superhero comic book style".
+- AVOID: "glistening wet sheen", "soft cel-shading", "gradient fills", "delicate anime features", "photorealism".`
+  },
+  concept_sketch: {
+    tail: "Masterpiece Quality: technical concept art, pure black ink linework, clean silhouette, zero shading, professional character design sheet finish. Pure white background.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A minimalist, highly precise character concept art design sheet on a pure white background. The artwork is completely unshaded, consisting purely of clean, elegant, and intricate black ink outlines of varying line weights. Every detail is focused on capturing the perfect silhouette, anatomical precision, and detailed costume construction. There is zero color, zero shading, zero cross-hatching, and zero gradients.
+The overall impression is: minimalist design sheet, pure clean black linework, anatomical precision.
+NOT: colored rendering, gray shading, digital painting, watercolor washes, realistic photography, bold comic fills.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "pure black ink outlines", "intricate line weight", "elegant linework", "zero shading", "clean silhouette", "character design sheet style", "minimalist art".
+- AVOID: "any colors", "gray scale shading", "cel shading", "gradient fills", "wet textures", "screentones".`
+  },
+  watercolor: {
+    tail: "Masterpiece Quality: soft watercolor fantasy illustration, flowing paint washes, visible paper texture, delicate color bleeding at edges, loose expressive brushwork with clean ink outlines, Japanese fantasy illustration quality.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A delicate, dreamy Japanese watercolor fantasy illustration on a textured cold-press paper background. The style features flowing watercolor paint washes with beautiful organic color bleeding at the edges and visible paper grain textures. Linework is soft and loose, drawn with fine ink pen lines that are occasionally dissolved or broken by the paint. Shading is soft, painterly, and ambient, relying on the natural transparency and blending of the watercolor pigments rather than digital gradients. Colors are soft, rich, and slightly muted, with a magical, whimsical fantasy feel.
+The overall impression is: traditional hand-painted watercolor, organic texture, delicate paper bleeding, whimsical fantasy.
+NOT: bold black digital outlines, plastic glistening textures, wet slime, hard-edged cel shading, high-contrast comic inks, photorealism.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "flowing watercolor paint washes", "organic color bleeding", "cold-press paper texture", "loose delicate ink outlines", "transparent pigment layering", "whimsical fantasy illustration".
+- AVOID: "bold black digital outlines", "glossy wet sheen", "hard-edged cel shading", "flat vector colors".`
+  },
+  ultra_realistic: {
+    tail: "Masterpiece Quality: hyper-realistic photography, 85mm lens f/1.8, visible skin texture, Chiaroscuro lighting, 8K resolution, cinematic color grading.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A hyper-realistic, stunning photographic portrait of a fantasy character captured on a professional high-end camera. The lighting is dramatic Chiaroscuro, casting natural, deep shadows and soft, rich highlights across the face and body. Shot with a high-end 85mm f/1.8 prime lens, creating a pin-sharp focus on the character's face with a buttery, out-of-focus background. The image showcases flawless, hyper-detailed skin texture (with fine pores, natural peach fuzz, and subtle imperfections), realistic wet eye reflections, and individual strands of hair. Colors are professionally color-graded with natural skin tones and organic lighting.
+The overall impression is: 8K hyper-realistic photograph, cinematic lighting, extreme anatomical and textural detail.
+NOT: anime line-art, digital cel shading, cartoon outlines, flat illustration styles, black ink strokes, watercolor painting.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "hyper-realistic photography", "cinematic Chiaroscuro lighting", "visible skin pores", "fine textures", "85mm prime lens depth of field", "natural reflections", "organic color grading".
+- AVOID: "outlines", "linework", "cel shading", "flat colors", "cartoon styles", "drawing", "painting".`
+  }
+};
 
 // ── Main generator ────────────────────────────────────────────────────────────
 
-export async function generateMasterPrompt(payload: PromptRequest) {
+export async function generateMasterPrompt(payload: PromptRequest, customApiKey?: string) {
   try {
+    const apiKey = customApiKey || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return { success: false, error: "OpenAI API Key is missing. Please set it in Settings.", rawInput: "" };
+    }
+    const openai = new OpenAI({ apiKey });
     const { composition, frame, styleId, styleDescription, backgroundDesc, traits } = payload;
 
     const traitsContext = Object.entries(traits)
@@ -71,7 +118,7 @@ export async function generateMasterPrompt(payload: PromptRequest) {
       .map(([key, val]) => `  ${key.toUpperCase()}: ${Array.isArray(val) ? val.join(", ") : val}`)
       .join("\n");
 
-    const qualityTail = STYLE_TAIL[styleId ?? ""] ?? STYLE_TAIL["glistening_anime"];
+    const config = STYLE_CONFIGS[styleId ?? ""] ?? STYLE_CONFIGS["glistening_anime"];
 
     const systemInstruction = `
 You are an expert AI image prompt engineer specialising in anime and fantasy character art.
@@ -100,16 +147,12 @@ RULES:
 - Never use words: revealing, skin-tight, naked, nude, exposed, explicit.
 - One character only — never mention multiple figures.
 - Write in flowing, vivid prose (not bullet points).
-- STYLE LANGUAGE: When describing any visual quality for the Glistening Anime style, use words like:
-  "bold clean black digital outlines", "crisp line art", "highly reflective glistening highlights",
-  "glossy skin", "wet glistening sheen", "glass-like transparency", "vibrant saturated colors",
-  "rich cel-shading with soft internal gradients", "perfectly sharp professional digital illustration".
-  AVOID: "sketchy lines", "fuzzy edges", "dark gritty comic book style", "loose paint washes".
+- ${config.guidelines}
 
 QUALITY TAIL TO APPEND VERBATIM AT THE END:
-${qualityTail}
+${config.tail}
 
-${REFERENCE_EXAMPLE}
+${config.reference}
 `;
 
     const userMessage = `

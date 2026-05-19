@@ -2,8 +2,6 @@
 
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 // gpt-image-2 supports custom sizes: width & height must be divisible by 16,
 // aspect ratio between 1:3 and 3:1. Safe max before experimental tier: 2560px per axis.
 const FRAME_SIZE_MAP: Record<string, string> = {
@@ -17,7 +15,12 @@ const FRAME_SIZE_MAP: Record<string, string> = {
 
 const MAX_PROMPT_CHARS = 3900;
 
-export async function generateImage(prompt: string, frame: string) {
+export async function generateImage(prompt: string, frame: string, customApiKey?: string) {
+  const apiKey = customApiKey || process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return { success: false, error: "OpenAI API Key is missing. Please set it in Settings." };
+  }
+  const openai = new OpenAI({ apiKey });
   const size = FRAME_SIZE_MAP[frame] ?? "2048x2048";
   const safePrompt = prompt.length > MAX_PROMPT_CHARS
     ? prompt.slice(0, MAX_PROMPT_CHARS)

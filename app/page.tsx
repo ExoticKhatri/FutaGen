@@ -5,6 +5,7 @@ import ViewPanel from '@/components/ViewPanel';
 import ControlPanel from '@/components/ControlPanel';
 import Dock from '@/components/Dock';
 import Library from '@/components/Library';
+import SettingsModal from '@/components/SettingsModal';
 import {
   GeneratorState,
   INITIAL_GENERATOR_STATE,
@@ -25,6 +26,7 @@ export default function Home() {
   const [genState, setGenState]           = useState<GeneratorState>(INITIAL_GENERATOR_STATE);
   const [imageGenState, setImageGenState] = useState<ImageGenState>(INITIAL_IMAGE_GEN_STATE);
   const [screen, setScreen]               = useState<'create' | 'library'>('create');
+  const [settingsOpen, setSettingsOpen]   = useState(false);
 
   const randomSeedGen = () => seedEditorRef.current?.triggerRandomize();
   const isGenerating  = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
@@ -81,6 +83,8 @@ export default function Home() {
     const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
     const bgData    = GENERATOR_CONFIG.BACKGROUNDS.find(b => b.id === genState.background);
 
+    const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
+
     const promptResult = await generateMasterPrompt({
       composition:      compData?.label        || genState.composition,
       frame:            frameData?.ratio        || genState.frame,
@@ -88,10 +92,10 @@ export default function Home() {
       styleDescription: styleData?.description || genState.style,
       backgroundDesc:   bgData?.description    || genState.background,
       traits:           traitData,
-    });
+    }, customApiKey);
 
     if (!promptResult.success || !promptResult.prompt) {
-      setImageGenState(s => ({ ...s, status: 'error', message: 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
+      setImageGenState(s => ({ ...s, status: 'error', message: promptResult.error || 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
       return;
     }
 
@@ -106,7 +110,7 @@ export default function Home() {
         setImageGenState(s => ({ ...s, message: `Retrying — attempt ${attempt} / ${MAX_RETRIES}...`, attempt }));
       }
 
-      const result = await generateImage(prompt, genState.frame);
+      const result = await generateImage(prompt, genState.frame, customApiKey);
 
       if (result.success && result.imageUrl) {
         setImageGenState({ status: 'done', message: 'Saving to library...', imageUrl: result.imageUrl, prompt, rawInput: null, attempt });
@@ -178,11 +182,14 @@ export default function Home() {
         <Dock
           onDiceClick={randomSeedGen}
           onGenerateClick={handleGenerate}
+          onSettingsClick={() => setSettingsOpen(true)}
           onScreenChange={setScreen}
           screen={screen}
           generating={isGenerating}
         />
       </div>
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </main>
   );
 }

@@ -1,9 +1,9 @@
-import { Dices, Sparkles, Terminal, RefreshCw, Wand2, Images } from 'lucide-react';
+import { Dices, Sparkles, Settings, RefreshCw, Wand2, Images } from 'lucide-react';
 
 interface DockProps {
   onDiceClick?: () => void;
   onGenerateClick?: () => void;
-  onMasterClick?: () => void;
+  onSettingsClick?: () => void;
   onScreenChange?: (screen: 'create' | 'library') => void;
   screen?: 'create' | 'library';
   generating?: boolean;
@@ -12,7 +12,7 @@ interface DockProps {
 export default function Dock({
   onDiceClick,
   onGenerateClick,
-  onMasterClick,
+  onSettingsClick,
   onScreenChange,
   screen = 'create',
   generating = false,
@@ -27,11 +27,11 @@ export default function Dock({
         <>
           <button
             type="button"
-            title="Master controls"
-            onClick={onMasterClick}
+            title="Settings"
+            onClick={onSettingsClick}
             className="p-2.5 rounded-xl text-white/25 hover:text-white hover:bg-white/5 transition-all duration-200"
           >
-            <Terminal size={16} strokeWidth={1.5} />
+            <Settings size={16} strokeWidth={1.5} />
           </button>
 
           <button

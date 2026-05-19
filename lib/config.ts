@@ -63,6 +63,16 @@ ART_STYLES: [
     description: 'Soft luminous Japanese anime style inspired by Makoto Shinkai. Clean precise linework with gentle weight variation, smooth cel shading with gradient transitions, high-saturation vibrant colors, warm cinematic light bloom, professional anime key visual quality.',
   },
   {
+    id: 'retro_90s_anime',
+    label: 'Retro 90s Anime',
+    description: 'Nostalgic 1990s hand-painted cel anime aesthetic. Features warm organic colors, subtle film grain, chromatic aberration, and soft focus. Dark charcoal hand-inked line art with natural weight variations, classic geometric triangle highlights on hair, and vintage analog animation cell textures.',
+  },
+  {
+    id: 'classic_manga',
+    label: 'Classic Manga',
+    description: 'Traditional professional black and white Japanese manga page style. Expressive character ink drawing with sharp black pen strokes and beautiful line-weight variation. Shaded entirely using detailed halftone dot textures (screentones), dense cross-hatching, and deep solid black ink fills. Zero color.',
+  },
+  {
     id: 'comic_ink',
     label: 'Comic Ink',
     description: 'Western comic book style. Bold confident ink outlines with dynamic line weight variation. Flat color fills with solid black shadows. Strong graphic composition, high contrast. Professional superhero / fantasy comic art quality.',

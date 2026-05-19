@@ -29,15 +29,33 @@ export default function ControlPanel({
   const [style, setStyle]         = useState(GENERATOR_CONFIG.ART_STYLES[0].id);
   const [background, setBackground] = useState(GENERATOR_CONFIG.BACKGROUNDS[0].id);
 
-  /**
-   * Resolved traits come UP from TraitGrid (after modulo resolution).
-   * This is the single source of truth for the final character build.
-   */
   const [resolvedTraits, setResolvedTraits] = useState<MappedTraits | null>(null);
   const [resolvedTitles, setResolvedTitles] = useState<TraitTitles | null>(null);
 
   const internalRef = useRef<{ triggerRandomize: () => void } | null>(null);
   const seedEditorRef = externalRef || internalRef;
+
+  const loadDefaultSettings = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const savedComp = localStorage.getItem('default_composition');
+      const savedFrame = localStorage.getItem('default_frame');
+      const savedStyle = localStorage.getItem('default_style');
+      const savedBg = localStorage.getItem('default_background');
+
+      if (savedComp) setComp(savedComp);
+      if (savedFrame) setFrame(savedFrame);
+      if (savedStyle) setStyle(savedStyle);
+      if (savedBg) setBackground(savedBg);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDefaultSettings();
+    window.addEventListener('local-settings-updated', loadDefaultSettings);
+    return () => {
+      window.removeEventListener('local-settings-updated', loadDefaultSettings);
+    };
+  }, [loadDefaultSettings]);
 
   // Stable ref for onUpdate to avoid stale-closure issues in the effect below
   const onUpdateRef = useRef(onUpdate);
