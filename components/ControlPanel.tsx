@@ -9,6 +9,7 @@ import SeedEditor from './Controls/SeedEditor';
 import CompositionSelector from './Controls/CompositionSelector';
 import FrameSelector from './Controls/FrameSelector';
 import ArtStyleSelector from './Controls/StyleSelector';
+import BackgroundSelector from './Controls/BackgroundSelector';
 import TraitGrid from './Controls/TraitSelector';
 
 interface ControlPanelProps {
@@ -22,10 +23,11 @@ export default function ControlPanel({
   disable = false,
   onUpdate
 }: ControlPanelProps) {
-  const [seed, setSeed] = useState("");
-  const [comp, setComp] = useState(GENERATOR_CONFIG.COMPOSITIONS[0].id);
-  const [frame, setFrame] = useState(GENERATOR_CONFIG.FRAMES[0].id);
-  const [style, setStyle] = useState(GENERATOR_CONFIG.ART_STYLES[0].id);
+  const [seed, setSeed]           = useState("");
+  const [comp, setComp]           = useState(GENERATOR_CONFIG.COMPOSITIONS[0].id);
+  const [frame, setFrame]         = useState(GENERATOR_CONFIG.FRAMES[0].id);
+  const [style, setStyle]         = useState(GENERATOR_CONFIG.ART_STYLES[0].id);
+  const [background, setBackground] = useState(GENERATOR_CONFIG.BACKGROUNDS[0].id);
 
   /**
    * Resolved traits come UP from TraitGrid (after modulo resolution).
@@ -48,10 +50,11 @@ export default function ControlPanel({
       composition: comp,
       frame,
       style,
+      background,
       traits: resolvedTraits,
       traitTitles: resolvedTitles,
     });
-  }, [seed, comp, frame, style, resolvedTraits, resolvedTitles]);
+  }, [seed, comp, frame, style, background, resolvedTraits, resolvedTitles]);
 
   /**
    * TraitGrid calls this when:
@@ -88,6 +91,7 @@ export default function ControlPanel({
         {/* SECTION 2: RENDER SETTINGS (Stacked) */}
         <div className="space-y-8 w-full">
           <FrameSelector activeId={frame} setFrame={setFrame} disable={disable} />
+          <BackgroundSelector activeId={background} setBackground={setBackground} disable={disable} />
           <ArtStyleSelector activeId={style} setStyle={setStyle} disable={disable} />
         </div>
 

@@ -28,6 +28,7 @@ export interface ImageGenState {
   message: string;
   imageUrl: string | null;
   prompt: string | null;
+  rawInput: string | null;
   attempt: number;
 }
 
@@ -36,6 +37,7 @@ export interface GeneratorState {
   composition: string;
   frame: string;
   style: string;
+  background: string;
   traits: MappedTraits | null;
   traitTitles: TraitTitles | null;
 }
@@ -45,6 +47,7 @@ export const INITIAL_GENERATOR_STATE: GeneratorState = {
   composition: "portrait",
   frame: "portrait",
   style: "minimalist",
+  background: "plain_white",
   traits: null,
   traitTitles: null,
 };
@@ -54,5 +57,6 @@ export const INITIAL_IMAGE_GEN_STATE: ImageGenState = {
   message: '',
   imageUrl: null,
   prompt: null,
+  rawInput: null,
   attempt: 0,
 };

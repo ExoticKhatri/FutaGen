@@ -1,130 +1,128 @@
 "use server";
 
-import crypto from 'crypto';
+import { v2 as cloudinary } from 'cloudinary';
 
-const CLOUD_NAME  = process.env.CLOUDINARY_CLOUD_NAME;
-const API_KEY     = process.env.CLOUDINARY_API_KEY;
-const API_SECRET  = process.env.CLOUDINARY_API_SECRET;
-const FOLDER      = 'futa-gen';
+const FOLDER = 'futa-gen';
 
-function credentialsOk() {
-  return CLOUD_NAME && API_KEY && API_SECRET;
+function configure() {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure:     true,
+  });
 }
 
-// Escape Cloudinary context value special chars (| and =)
-function escapeCtx(s: string) {
-  return s.replace(/\\/g, '\\\\').replace(/=/g, '\\=').replace(/\|/g, '\\|');
-}
+const sanitize = (s: string) => s.replace(/[|=]/g, ' ').slice(0, 300);
 
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 export async function uploadToCloudinary(params: {
   imageDataUrl: string;
-  prompt: string;
-  seed: string;
-  source?: string;   // e.g. 'gemini' | 'gpt' — stored in context
-  tags?: string[];   // e.g. ['external'] — Cloudinary tag list
+  prompt:       string | null;
+  seed:         string;
+  source?:      string;
+  tags?:        string[];
+  ratio?:       string;
+  composition?: string;
+  style?:       string;
+  traitTitles?: string; // pre-serialised "category:title, ..." string
 }) {
-  if (!credentialsOk()) {
-    return { success: false, error: 'Cloudinary credentials not configured' };
-  }
+  configure();
 
-  const { imageDataUrl, prompt, seed, source, tags } = params;
-  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const { imageDataUrl, prompt, seed, source, tags, ratio, composition, style, traitTitles } = params;
 
-  // Build context — source is optional extra field
-  const ctxParts = [
-    `prompt=${escapeCtx(prompt.slice(0, 500))}`,
-    `seed=${escapeCtx(seed)}`,
-    ...(source ? [`source=${escapeCtx(source)}`] : []),
-  ];
-  const contextStr = ctxParts.join('|');
-
-  // Parameters that must be signed (sorted alphabetically)
-  const toSign: Record<string, string> = {
-    context:   contextStr,
-    folder:    FOLDER,
-    timestamp,
+  const context: Record<string, string> = {
+    seed:        sanitize(seed),
+    prompt:      sanitize(prompt ?? ''),
+    ratio:       sanitize(ratio        ?? ''),
+    composition: sanitize(composition  ?? ''),
+    style:       sanitize(style        ?? ''),
+    traits:      sanitize(traitTitles  ?? ''),
+    ...(source ? { source: sanitize(source) } : {}),
   };
-  if (tags && tags.length > 0) toSign.tags = tags.join(',');
-
-  const sigBase =
-    Object.keys(toSign)
-      .sort()
-      .map(k => `${k}=${toSign[k]}`)
-      .join('&') + API_SECRET;
-
-  const signature = crypto.createHash('sha1').update(sigBase).digest('hex');
-
-  const body = new FormData();
-  body.append('file',      imageDataUrl);
-  body.append('timestamp', timestamp);
-  body.append('api_key',   API_KEY!);
-  body.append('signature', signature);
-  body.append('folder',    FOLDER);
-  body.append('context',   contextStr);
-  if (tags && tags.length > 0) body.append('tags', tags.join(','));
 
   try {
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: 'POST',
-      body,
+    const result = await cloudinary.uploader.upload(imageDataUrl, {
+      folder:        FOLDER,
+      context,
+      tags:          tags ?? [],
+      resource_type: 'image',
     });
-    const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error?.message ?? 'Upload failed');
-
-    return { success: true, publicId: data.public_id as string, secureUrl: data.secure_url as string };
+    return {
+      success:   true,
+      publicId:  result.public_id,
+      secureUrl: result.secure_url,
+    };
   } catch (err: any) {
-    return { success: false, error: err.message as string };
+    console.error('CLOUDINARY_UPLOAD_ERROR:', err?.message ?? err);
+    return { success: false, error: err?.message ?? 'Upload failed' };
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+
+export async function deleteImage(publicId: string): Promise<{ success: boolean; error?: string }> {
+  configure();
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+    return { success: true };
+  } catch (err: any) {
+    console.error('CLOUDINARY_DELETE_ERROR:', err?.message ?? err);
+    return { success: false, error: err?.message ?? 'Delete failed' };
   }
 }
 
 // ── Fetch library ─────────────────────────────────────────────────────────────
 
 export interface LibraryImage {
-  id: string;
-  url: string;
-  seed: string;
-  prompt: string;
-  createdAt: string;
+  id:          string;
+  url:         string;
+  seed:        string;
+  prompt:      string;
+  ratio:       string;
+  composition: string;
+  style:       string;
+  traits:      string;
+  createdAt:   string;
 }
 
-export async function fetchLibraryImages(): Promise<{ success: boolean; images: LibraryImage[]; error?: string }> {
-  if (!credentialsOk()) {
-    return { success: false, images: [], error: 'Cloudinary credentials not configured' };
-  }
-
-  const auth = Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64');
-  const qs   = new URLSearchParams({
-    prefix:      `${FOLDER}/`,
-    type:        'upload',
-    context:     'true',
-    max_results: '80',
-  });
+export async function fetchLibraryImages(): Promise<{
+  success: boolean;
+  images:  LibraryImage[];
+  error?:  string;
+}> {
+  configure();
 
   try {
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?${qs}`, {
-      headers: { Authorization: `Basic ${auth}` },
-      cache:   'no-store',
+    const result = await cloudinary.api.resources({
+      type:        'upload',
+      prefix:      `${FOLDER}/`,
+      context:     true,
+      max_results: 80,
     });
-    const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error?.message ?? 'Fetch failed');
+    const images: LibraryImage[] = (result.resources ?? []).map((r: any) => {
+      const ctx = r.context?.custom ?? {};
+      return {
+        id:          r.public_id,
+        url:         r.secure_url,
+        seed:        ctx.seed        ?? '',
+        prompt:      ctx.prompt      ?? '',
+        ratio:       ctx.ratio       ?? '',
+        composition: ctx.composition ?? '',
+        style:       ctx.style       ?? '',
+        traits:      ctx.traits      ?? '',
+        createdAt:   r.created_at,
+      };
+    });
 
-    const images: LibraryImage[] = (data.resources ?? []).map((r: any) => ({
-      id:        r.public_id,
-      url:       r.secure_url,
-      seed:      r.context?.custom?.seed    ?? '',
-      prompt:    r.context?.custom?.prompt  ?? '',
-      createdAt: r.created_at,
-    }));
-
-    // Newest first
     images.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return { success: true, images };
   } catch (err: any) {
-    return { success: false, images: [], error: err.message };
+    console.error('CLOUDINARY_FETCH_ERROR:', err?.message ?? err);
+    return { success: false, images: [], error: err?.message ?? 'Fetch failed' };
   }
 }

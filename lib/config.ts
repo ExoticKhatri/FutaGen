@@ -2,6 +2,12 @@
  * Global Configuration for Seed Engine
  */
 
+export const FEATURE_FLAGS = {
+  // When true: fetches per-trait descriptions from Supabase before generating the prompt.
+  // When false: passes trait titles directly — faster and works with null descriptions.
+  USE_TRAIT_DESCRIPTIONS: false,
+};
+
 export const GENERATOR_CONFIG = {
   SEED: {
     MAX_LENGTH: 64,
@@ -46,30 +52,93 @@ export const GENERATOR_CONFIG = {
   ],
   
 ART_STYLES: [
-  { 
-    id: 'anime_suzume', 
-    label: 'Suzume Aesthetic', 
-    description: 'High-fidelity Japanese anime style inspired by Makoto Shinkai. Features vast cinematic skies, dramatic backlighting, lens flares, and vibrant colors. Character features are clean with subtle cell shading and expressive, glowing eyes. Backgrounds have a painterly, luminous quality with high contrast.' 
+  {
+    id: 'anime_suzume',
+    label: 'Suzume Anime',
+    description: 'Soft luminous Japanese anime style inspired by Makoto Shinkai. Clean precise linework with gentle weight variation, smooth cel shading with gradient transitions, high-saturation vibrant colors, warm cinematic light bloom, professional anime key visual quality.',
   },
-  { 
-    id: 'concept_sketch', 
-    label: 'Technical Sketch', 
-    description: 'Minimalist concept art line-work. Pure black ink outlines on a textured white or parchment background. Zero shading, focusing entirely on silhouette, anatomical precision, and intricate line weight. Professional character design sheet style, clean and sharp strokes.' 
+  {
+    id: 'webtoon',
+    label: 'Webtoon',
+    description: 'Korean webtoon / manhwa digital art style. Crisp clean outlines, flat cel shading with minimal shadows, high-saturation vibrant color palette, expressive simplified features. Professional Korean digital manhwa quality.',
   },
-  { 
-    id: '3d_model', 
-    label: 'V-Ray Render', 
-    description: 'High-end 3D character render. Features subsurface scattering on skin, realistic hair physics, and complex material shaders (latex, silk, or obsidian). Lighting is 3-point studio setup with soft global illumination. Output resembles a high-budget cinematic video game asset or Octane Render.' 
+  {
+    id: 'dark_fantasy',
+    label: 'Dark Fantasy',
+    description: 'Epic dark fantasy illustration. Rich painterly rendering with dramatic Chiaroscuro lighting, deep shadows, vibrant accent colors against darkness, detailed atmospheric quality. Resembles Magic: The Gathering card art or high-end TTRPG illustration.',
   },
-  { 
-    id: 'ultra_realistic', 
-    label: 'Cinematic Realism', 
-    description: 'Hyper-realistic photography style. Shot on 85mm lens, f/1.8. Features visible skin pores, realistic peach fuzz, and natural eye reflections. Lighting is moody and atmospheric (Chiaroscuro), emphasizing raw texture and depth. 8k resolution, photorealistic textures, and cinematic color grading.' 
+  {
+    id: 'watercolor',
+    label: 'Watercolor',
+    description: 'Soft watercolor fantasy illustration. Flowing paint washes with visible paper texture, delicate color bleeding at edges. Loose expressive brushwork with clean ink outlines. Japanese fantasy illustration quality.',
   },
-  { 
-    id: 'minimalist', 
-    label: 'Minimalist Dark', 
-    description: 'High-contrast monochromatic aesthetic. Focuses on stark silhouettes and negative space. Features sharp edges, deep blacks, and a clean digital finish with no unnecessary decorative elements.' 
+  {
+    id: 'comic_ink',
+    label: 'Comic Ink',
+    description: 'Western comic book style. Bold confident ink outlines with dynamic line weight variation. Flat color fills with solid black shadows. Strong graphic composition, high contrast. Professional superhero / fantasy comic art quality.',
+  },
+  {
+    id: 'concept_sketch',
+    label: 'Concept Sketch',
+    description: 'Minimalist concept art linework. Pure black ink outlines on white. Zero shading, focusing entirely on silhouette and anatomical precision with intricate line weight. Professional character design sheet style.',
+  },
+  {
+    id: 'ultra_realistic',
+    label: 'Cinematic Photo',
+    description: 'Hyper-realistic photography style. Shot on 85mm lens f/1.8. Visible skin texture, natural eye reflections, Chiaroscuro lighting, 8K resolution, cinematic color grading.',
+  },
+  {
+    id: 'minimalist',
+    label: 'Minimalist',
+    description: 'High-contrast monochromatic aesthetic. Stark silhouettes, deep blacks, negative space, clean digital finish with no unnecessary decorative elements.',
+  },
+],
+
+BACKGROUNDS: [
+  {
+    id: 'plain_white',
+    label: 'White',
+    description: 'Pure clinical white background. Completely empty, zero props, zero shadows, zero environment. All focus on the character.',
+  },
+  {
+    id: 'auto',
+    label: 'Auto',
+    description: 'AI chooses the most fitting background to complement the character\'s traits and art style. Create an atmospheric, thematically appropriate backdrop.',
+  },
+  {
+    id: 'dark_void',
+    label: 'Dark Void',
+    description: 'Deep pure black void background with subtle volumetric depth. No environment, no props, just rich absolute darkness.',
+  },
+  {
+    id: 'cosmic',
+    label: 'Cosmic',
+    description: 'Deep cosmic space background. Distant galaxies, ethereal nebula glow in violet and indigo, soft starfield with gentle lens flare.',
+  },
+  {
+    id: 'hellscape',
+    label: 'Hellscape',
+    description: 'Dramatic demonic hellscape background. Distant ember and lava glow on the horizon, cracked obsidian ground with heat haze, atmospheric crimson and orange smog.',
+  },
+  {
+    id: 'misty_forest',
+    label: 'Misty Forest',
+    description: 'Ethereal ancient forest at night. Soft ambient moonlight filters through massive dark trees, low-lying ground fog, bioluminescent particles drifting through air.',
+  },
+  {
+    id: 'moonlit_night',
+    label: 'Moonlit',
+    description: 'Open moonlit night sky. Full moon casting soft silver-blue light, minimal atmospheric clouds, distant horizon glow.',
+  },
+  {
+    id: 'throne_room',
+    label: 'Throne Room',
+    description: 'Grand gothic throne room. Dark stone pillars with subtle candlelight, high vaulted ceiling lost in shadow, ornate obsidian floor.',
+  },
+  {
+    id: 'cherry_blossom',
+    label: 'Sakura',
+    description: 'Soft Japanese cherry blossom garden. Delicate pink petals drifting through warm sunlight, blurred sakura trees, gentle spring atmosphere.',
   },
 ],
 };

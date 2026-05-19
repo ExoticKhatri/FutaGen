@@ -4,34 +4,32 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// gpt-image-1 supported sizes (dall-e-3 was retired 2026-05-12)
-type ImageSize = "1024x1024" | "1536x1024" | "1024x1536" | "auto";
-
-const FRAME_SIZE_MAP: Record<string, ImageSize> = {
-  landscape:    "1536x1024",
-  portrait:     "1024x1536",
-  "three-four": "1024x1536",
-  square:       "1024x1024",
-  "four-three": "1024x1024",
+// gpt-image-2 supports custom sizes: width & height must be divisible by 16,
+// aspect ratio between 1:3 and 3:1. Safe max before experimental tier: 2560px per axis.
+const FRAME_SIZE_MAP: Record<string, string> = {
+  landscape:    "2560x1440", // 16:9
+  "four-three": "2560x1920", // 4:3
+  square:       "2048x2048", // 1:1
+  "three-four": "1920x2560", // 3:4
+  portrait:     "1440x2560", // 9:16
   auto:         "auto",
 };
 
-// gpt-image-1 max prompt length
 const MAX_PROMPT_CHARS = 3900;
 
 export async function generateImage(prompt: string, frame: string) {
-  const size: ImageSize = FRAME_SIZE_MAP[frame] ?? "1024x1024";
+  const size = FRAME_SIZE_MAP[frame] ?? "2048x2048";
   const safePrompt = prompt.length > MAX_PROMPT_CHARS
     ? prompt.slice(0, MAX_PROMPT_CHARS)
     : prompt;
 
   try {
     const response = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt: safePrompt,
-      n: 1,
-      size,
-      quality: "medium",
+      model:   "gpt-image-2",
+      prompt:  safePrompt,
+      n:       1,
+      size:    size as Parameters<typeof openai.images.generate>[0]["size"],
+      quality: "high",
     });
 
     const b64 = response.data?.[0]?.b64_json;

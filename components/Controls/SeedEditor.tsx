@@ -72,7 +72,7 @@ const SeedEditor = forwardRef((props: SeedEditorProps, ref) => {
   };
 
   return (
-    <section className={`relative group w-full transition-opacity duration-300 ${disable ? 'opacity-50' : 'opacity-100'}`}>
+    <section className={`relative group w-full`} >
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <Hash size={12} className={disable ? "text-zinc-600" : "text-accent"} />
