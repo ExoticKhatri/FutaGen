@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, X, Copy, Check, AlertCircle, ImageOff, Download, Trash2 } from 'lucide-react';
 import { fetchLibraryImages, deleteImage, LibraryImage } from '@/actions/cloudinary';
@@ -96,10 +97,11 @@ export default function Library() {
           <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3">
             {images.map(img => (
               <div key={img.id} className="break-inside-avoid mb-3 group relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={img.url}
                   alt={img.seed || 'Generated character'}
+                  width={300}
+                  height={400}
                   className="w-full h-auto block border border-white/5 group-hover:border-accent/20 transition-colors cursor-pointer"
                   onClick={() => setSelected(img)}
                 />
@@ -145,12 +147,12 @@ export default function Library() {
             onClick={e => e.stopPropagation()}
           >
             {/* Image */}
-            <div className="flex-1 min-w-0 flex items-center justify-center overflow-auto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <div className="flex-1 min-w-0 flex items-center justify-center overflow-auto relative">
+              <Image
                 src={selected.url}
                 alt={selected.seed}
-                className="max-h-[75vh] w-auto border border-white/10"
+                fill
+                className="max-h-[75vh] w-auto border border-white/10 object-contain"
                 style={{ touchAction: 'pinch-zoom' }}
               />
             </div>
