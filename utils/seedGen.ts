@@ -1,7 +1,7 @@
 import { GENERATOR_CONFIG } from "@/lib/config";
 
 /**
- * Generates a random base36 string based on config lengths
+ * Generates a random base36 string based on config lengthss
  */
 export const generateRandomSeed = (): string => {
   const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
