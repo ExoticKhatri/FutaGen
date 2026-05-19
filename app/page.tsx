@@ -25,7 +25,6 @@ export default function Home() {
   const [genState, setGenState]           = useState<GeneratorState>(INITIAL_GENERATOR_STATE);
   const [imageGenState, setImageGenState] = useState<ImageGenState>(INITIAL_IMAGE_GEN_STATE);
   const [screen, setScreen]               = useState<'create' | 'library'>('create');
-  const [mobileView, setMobileView]       = useState<'controls' | 'preview'>('controls');
 
   const randomSeedGen = () => seedEditorRef.current?.triggerRandomize();
   const isGenerating  = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
@@ -93,7 +92,6 @@ export default function Home() {
 
     if (!promptResult.success || !promptResult.prompt) {
       setImageGenState(s => ({ ...s, status: 'error', message: 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
-      setMobileView('preview');
       return;
     }
 
@@ -112,7 +110,6 @@ export default function Home() {
 
       if (result.success && result.imageUrl) {
         setImageGenState({ status: 'done', message: 'Saving to library...', imageUrl: result.imageUrl, prompt, rawInput: null, attempt });
-        setMobileView('preview');
 
         const traitTitles = genState.traitTitles
           ? Object.entries(genState.traitTitles)
@@ -148,24 +145,22 @@ export default function Home() {
     <main className="relative flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
 
       {screen === 'create' ? (
-        <div className="flex flex-col md:flex-row flex-1 min-h-0">
-          {/* Preview panel — hidden on mobile when controls tab active */}
-          <aside className={`
-            md:w-[30%] md:flex md:flex-col md:h-full
-            bg-panel border-b md:border-b-0 md:border-r border-white/5
-            ${mobileView === 'preview' ? 'flex flex-col flex-1 min-h-0' : 'hidden md:flex'}
-          `}>
-            <div className="flex-1 min-h-0 overflow-hidden p-2">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+          {/* Preview panel — occupies full screen height on mobile, side panel on desktop */}
+          <aside className="
+            w-full shrink-0 h-dvh
+            md:w-[30%] md:h-full md:border-r border-white/5 bg-panel border-b md:border-b-0
+          ">
+            <div className="h-full overflow-hidden p-2">
               <ViewPanel state={genState} imageGenState={imageGenState} />
             </div>
           </aside>
 
-          {/* Controls panel — hidden on mobile when preview tab active */}
-          <section className={`
-            md:w-[70%] md:flex md:flex-col md:h-full md:overflow-y-auto
+          {/* Controls panel — positioned below preview on mobile, side panel on desktop */}
+          <section className="
+            w-full shrink-0 md:shrink md:w-[70%] md:h-full md:overflow-y-auto
             bg-background p-4 md:p-8
-            ${mobileView === 'controls' ? 'flex flex-col flex-1 min-h-0 overflow-y-auto' : 'hidden md:flex'}
-          `}>
+          ">
             <ControlPanel
               seedEditorRef={seedEditorRef}
               onUpdate={setGenState}
@@ -176,30 +171,6 @@ export default function Home() {
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <Library />
-        </div>
-      )}
-
-      {/* Mobile tab bar — only shown in create mode */}
-      {screen === 'create' && (
-        <div className="md:hidden flex border-t border-white/10 bg-panel shrink-0 mb-20">
-          <button
-            type="button"
-            onClick={() => setMobileView('controls')}
-            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-              mobileView === 'controls' ? 'text-accent border-t-2 border-accent -mt-px' : 'text-white/30'
-            }`}
-          >
-            Controls
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileView('preview')}
-            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-              mobileView === 'preview' ? 'text-accent border-t-2 border-accent -mt-px' : 'text-white/30'
-            }`}
-          >
-            Preview
-          </button>
         </div>
       )}
 

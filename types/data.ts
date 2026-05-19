@@ -46,7 +46,7 @@ export const INITIAL_GENERATOR_STATE: GeneratorState = {
   seed: "",
   composition: "portrait",
   frame: "portrait",
-  style: "minimalist",
+  style: "glistening_anime",
   background: "plain_white",
   traits: null,
   traitTitles: null,

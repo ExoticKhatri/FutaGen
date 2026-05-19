@@ -16,20 +16,19 @@ interface PromptRequest {
 // ── Style-specific quality tail tags ─────────────────────────────────────────
 
 const STYLE_TAIL: Record<string, string> = {
+  glistening_anime:
+    "Masterpiece Quality: Modern premium anime illustration, sleek glistening style, " +
+    "perfectly crisp and bold clean black digital outlines (crisp line art, NOT sketchy), " +
+    "rich cel-shading with soft internal gradients, high-specular reflective glossy highlights " +
+    "on skin, hair, and eyes. Saturated vibrant colors, wet glistening sheen, highly defined " +
+    "dripping liquid/slime/viscous elements with glossy shine and glass-like transparency, " +
+    "extremely clean and sharp professional digital illustration quality. Pure white background.",
   anime_suzume:
     "Masterpiece Quality: Makoto Shinkai / Suzume-style anime, soft luminous cel shading " +
     "with smooth gradient transitions, clean precise linework with gentle weight variation " +
     "(NOT harsh or thick outlines), high-saturation vibrant color palette with warm cinematic " +
     "light bloom, soft skin highlights, subtle ambient glow, clear material separation. " +
     "NOT dark comic style. NOT gritty. Soft, luminous, clean.",
-  webtoon:
-    "Masterpiece Quality: Korean webtoon / manhwa digital art, crisp clean outlines, " +
-    "flat cel shading with minimal shadows, high-saturation vibrant colors, " +
-    "expressive simplified features, professional manhwa studio quality.",
-  dark_fantasy:
-    "Masterpiece Quality: dark fantasy illustration, rich painterly Chiaroscuro lighting, " +
-    "deep dramatic shadows with vibrant accent colors, atmospheric depth, " +
-    "Magic the Gathering / D&D card art level of detail and craft.",
   watercolor:
     "Masterpiece Quality: soft watercolor fantasy illustration, flowing paint washes, " +
     "visible paper texture, delicate color bleeding at edges, " +
@@ -44,26 +43,21 @@ const STYLE_TAIL: Record<string, string> = {
   ultra_realistic:
     "Masterpiece Quality: hyper-realistic photography, 85mm lens f/1.8, " +
     "visible skin texture, Chiaroscuro lighting, 8K resolution, cinematic color grading.",
-  minimalist:
-    "Masterpiece Quality: high-contrast monochromatic design, stark silhouette, " +
-    "sharp edges, deep blacks, clean digital finish.",
 };
 
-// ── Reference prompt template (Suzume style) ─────────────────────────────────
+// ── Reference prompt template (Glistening Anime style) ───────────────────────
 // This is the gold-standard structure the AI must follow for all styles.
 
 const REFERENCE_EXAMPLE = `
 TARGET AESTHETIC — the final image must look like this description:
-A clean, professional anime character standing on a pure white background. Her skin is rendered with soft,
-luminous cel shading — smooth gradient transitions from shadow to highlight with no harsh edges or banding.
-Her linework is clean and precise but gentle: lines are thin and vary in weight naturally, giving the figure
-a soft, polished look rather than a gritty comic-book appearance. Colors are vivid and high-saturation but
-warm and harmonious, not neon or garish. Her hair flows naturally with smooth shading that suggests volume
-without excessive detail. Her costume is minimal draped fabric — rendered with clean cloth folds and soft
-fabric shading that clearly separates it from her skin. The horns are elegant and simple with a smooth
-color gradient. The overall impression is: luminous, elegant, clean, professional anime character art —
-the visual quality of a high-budget anime studio key visual or official character art sheet.
-NOT: dark, gritty, harsh outlines, heavy shadows, neon colors, western comic style.
+A sleek, professional anime character standing on a pure white background. Her skin is rendered with detailed,
+smooth cel-shading and rich color gradients, adorned with realistic glossy highlights and a wet, reflective glistening sheen.
+Her linework consists of bold, perfectly clean black outlines that are extremely sharp and crisp digital line-art with zero sketchiness.
+Colors are highly saturated, vivid, and beautifully intense. Her hair has highly detailed glossy highlights and reflections suggesting a polished,
+almost liquid volume. Her minimal outfit is rendered with clean fabric folds, accompanied by highly defined dripping liquid, slime, or viscous
+elements that glisten under cinematic light, showcasing glossy highlights and transparent glass-like properties.
+The overall impression is: sleek, polished, glistening, high-contrast, modern anime illustration.
+NOT: sketchy lines, messy outlines, loose painterly washes, gritty textures, faded color palettes, realistic human photography.
 `;
 
 // ── Main generator ────────────────────────────────────────────────────────────
@@ -77,7 +71,7 @@ export async function generateMasterPrompt(payload: PromptRequest) {
       .map(([key, val]) => `  ${key.toUpperCase()}: ${Array.isArray(val) ? val.join(", ") : val}`)
       .join("\n");
 
-    const qualityTail = STYLE_TAIL[styleId ?? ""] ?? STYLE_TAIL["anime_suzume"];
+    const qualityTail = STYLE_TAIL[styleId ?? ""] ?? STYLE_TAIL["glistening_anime"];
 
     const systemInstruction = `
 You are an expert AI image prompt engineer specialising in anime and fantasy character art.
@@ -106,10 +100,11 @@ RULES:
 - Never use words: revealing, skin-tight, naked, nude, exposed, explicit.
 - One character only — never mention multiple figures.
 - Write in flowing, vivid prose (not bullet points).
-- STYLE LANGUAGE: When describing any visual quality for the Suzume / anime style, use words like:
-  "soft luminous", "smooth gradient", "gentle cel shading", "clean precise lines", "warm ambient glow",
-  "silk-smooth", "high-saturation yet harmonious", "professional anime key visual quality".
-  AVOID: "sharp-edged", "harsh linework", "hard outline", "gritty", "dark comic", "stark contrast".
+- STYLE LANGUAGE: When describing any visual quality for the Glistening Anime style, use words like:
+  "bold clean black digital outlines", "crisp line art", "highly reflective glistening highlights",
+  "glossy skin", "wet glistening sheen", "glass-like transparency", "vibrant saturated colors",
+  "rich cel-shading with soft internal gradients", "perfectly sharp professional digital illustration".
+  AVOID: "sketchy lines", "fuzzy edges", "dark gritty comic book style", "loose paint washes".
 
 QUALITY TAIL TO APPEND VERBATIM AT THE END:
 ${qualityTail}

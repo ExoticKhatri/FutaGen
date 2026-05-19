@@ -29,9 +29,9 @@ export default function CompositionSelector({ activeId, setComp, disable = false
               disabled={disable}
               onClick={() => setComp(item.id)}
               className={`
-                relative px-2 rounded-lg border transition-all duration-300
+                relative py-3 px-3 rounded-lg border transition-all duration-300
                 uppercase tracking-tight font-bold overflow-hidden
-                flex items-center justify-center text-center text-[10px]
+                flex items-center justify-center text-center text-[10px] min-h-[42px]
                 ${isActive 
                   ? 'bg-teal-500/5 border-teal-500/40 text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.1)]' 
                   : 'bg-zinc-900/20 border-zinc-800/60 text-zinc-500 hover:border-zinc-700 hover:bg-zinc-800/40'
