@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Layout, Terminal, Wand2, Upload, RefreshCw, AlertCircle, Copy, Check, Download, ZoomIn, X } from 'lucide-react';
+import { Layout, Terminal, Wand2, Upload, AlertCircle, Copy, Check, Download, ZoomIn, X, Sparkles } from 'lucide-react';
 import { GeneratorState, ImageGenState } from '@/types/data';
 import LogsTab from '@/components/Tabs/LogTab';
 import UploadTab from '@/components/Tabs/UploadTab';
@@ -19,7 +19,16 @@ const STATUS_LABELS: Record<string, string> = {
   generating_image:  'RENDERING_IMAGE',
   error:             'PIPELINE_ERROR',
   done:              'RENDER_COMPLETE',
+  prompt_done:       'PROMPT_READY',
 };
+
+// Deterministic widths for the prompt-assembly skeleton lines
+const SKELETON_WIDTHS = [100, 82, 96, 68, 91, 75, 88, 60, 95, 72, 85, 78];
+
+// Deterministic animation config for the pixel render grid (10×12 = 120 cells)
+const PIXEL_DURATIONS = ['1.0s', '1.4s', '1.8s', '1.2s', '1.6s'];
+const PIXEL_DELAYS    = ['0s', '0.25s', '0.5s', '0.75s', '1.0s', '1.25s', '1.5s', '1.75s', '2.0s', '2.25s'];
+const PIXEL_OPACITIES = ['bg-accent/50', 'bg-accent/30', 'bg-accent/15', 'bg-accent/40', 'bg-accent/20', 'bg-accent/10'];
 
 export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
   const [activeTab, setActiveTab]   = useState<TabType>('view');
@@ -43,7 +52,8 @@ export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
     { id: 'upload', label: 'Upload', icon: Upload    },
   ];
 
-  const isRunning = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
+  const isPromptPhase = ['fetching_traits', 'generating_prompt'].includes(imageGenState.status);
+  const isImagePhase  = imageGenState.status === 'generating_image';
 
   const copyPrompt = () => {
     const text = imageGenState.prompt;
@@ -100,16 +110,57 @@ export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
                 </div>
               )}
 
-              {isRunning && (
-                <div className="flex flex-col items-center gap-4 text-center px-4">
-                  <RefreshCw size={22} className="animate-spin text-accent" />
-                  <div className="space-y-2">
-                    <p className="text-[10px] text-accent tracking-[0.3em]">
+              {/* ── PROMPT PHASE: text-assembly animation ── */}
+              {isPromptPhase && (
+                <div className="flex flex-col items-start gap-4 w-full px-2">
+                  <div className="flex items-center gap-2">
+                    <Wand2 size={14} className="text-accent animate-pulse" strokeWidth={1.5} />
+                    <span className="text-[9px] text-accent tracking-[0.3em]">
                       {STATUS_LABELS[imageGenState.status] ?? imageGenState.status}
-                    </p>
-                    <p className="text-[9px] text-white/40 normal-case leading-relaxed">
-                      {imageGenState.message}
-                    </p>
+                    </span>
+                    <span className="text-accent animate-pulse text-xs leading-none">▋</span>
+                  </div>
+                  <div className="w-full space-y-2">
+                    {SKELETON_WIDTHS.map((w, i) => (
+                      <div
+                        key={i}
+                        className="h-[3px] bg-accent/25 rounded-full animate-pulse"
+                        style={{ width: `${w}%`, animationDelay: `${i * 0.12}s` }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-white/35 normal-case leading-relaxed">
+                    {imageGenState.message}
+                  </p>
+                </div>
+              )}
+
+              {/* ── IMAGE PHASE: pixel-render animation ── */}
+              {isImagePhase && (
+                <div className="flex flex-col items-center gap-5 w-full px-2">
+                  <div className="relative border border-accent/25 overflow-hidden p-px" style={{ width: 128, height: 192 }}>
+                    {/* Pixel grid */}
+                    <div className="grid gap-px h-full" style={{ gridTemplateColumns: 'repeat(10, 1fr)' }}>
+                      {Array.from({ length: 120 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`${PIXEL_OPACITIES[i % PIXEL_OPACITIES.length]} animate-pulse`}
+                          style={{
+                            animationDuration: PIXEL_DURATIONS[i % PIXEL_DURATIONS.length],
+                            animationDelay:    PIXEL_DELAYS[i % PIXEL_DELAYS.length],
+                          }}
+                        />
+                      ))}
+                    </div>
+                    {/* Scanline sweep overlay */}
+                    <div
+                      className="absolute inset-x-0 h-8 bg-gradient-to-b from-transparent via-accent/25 to-transparent pointer-events-none"
+                      style={{ animation: 'scanline 2s ease-in-out infinite' }}
+                    />
+                  </div>
+                  <div className="text-center space-y-1.5">
+                    <p className="text-[10px] text-accent tracking-[0.3em]">RENDERING_IMAGE</p>
+                    <p className="text-[9px] text-white/35 normal-case">{imageGenState.message}</p>
                   </div>
                 </div>
               )}
@@ -146,6 +197,17 @@ export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ── PROMPT ONLY done ── */}
+              {imageGenState.status === 'prompt_done' && (
+                <div className="flex flex-col items-center gap-3 text-center px-4">
+                  <Sparkles size={20} className="text-accent/70" />
+                  <p className="text-[10px] text-accent/80 tracking-[0.3em]">PROMPT_READY</p>
+                  <p className="text-[9px] text-white/40 normal-case leading-relaxed">
+                    {imageGenState.message}
+                  </p>
                 </div>
               )}
 
@@ -236,6 +298,7 @@ export default function ViewPanel({ state, imageGenState }: ViewPanelProps) {
           onClick={() => setZoomed(false)}
         >
           <button
+            aria-lable="zoom"
             type="button"
             onClick={() => setZoomed(false)}
             className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors z-10"

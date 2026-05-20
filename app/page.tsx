@@ -91,6 +91,7 @@ export default function Home() {
       styleId:          genState.style,
       styleDescription: styleData?.description || genState.style,
       backgroundDesc:   bgData?.description    || genState.background,
+      backgroundId:     genState.background,
       traits:           traitData,
     }, customApiKey);
 
@@ -145,6 +146,72 @@ export default function Home() {
     setImageGenState(s => ({ ...s, status: 'error', message: `Failed after ${MAX_RETRIES} attempts. ${lastError}` }));
   }, [genState]);
 
+  const handlePromptOnly = useCallback(async () => {
+    if (!genState.traits) return;
+
+    const traitData: Record<string, string | string[]> = {};
+
+    if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
+      setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+      try {
+        await Promise.all(
+          TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
+            const val    = genState.traits![category];
+            const titles = genState.traitTitles;
+            if (category === 'special' && Array.isArray(val)) {
+              const specialTitles = Array.isArray(titles?.special) ? titles.special : [];
+              const results = await Promise.all(
+                val.map(async (v, i) => {
+                  const { data } = await fetchSpecificEntryColumn(category, 'description', v);
+                  return (data as string | null) || specialTitles[i] || '';
+                })
+              );
+              traitData[category] = results.filter(Boolean);
+            } else if (typeof val === 'string' && val) {
+              const { data } = await fetchSpecificEntryColumn(category, 'description', val);
+              const titleFallback = typeof titles?.[category] === 'string' ? titles[category] as string : '';
+              traitData[category] = (data as string | null) || titleFallback;
+            }
+          })
+        );
+      } catch {
+        setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
+        return;
+      }
+    } else {
+      const titles = genState.traitTitles ?? {};
+      TRAIT_CATEGORIES.forEach((category: TraitCategory) => {
+        const t = titles[category];
+        if (t) traitData[category] = t;
+      });
+    }
+
+    setImageGenState({ status: 'generating_prompt', message: 'Assembling master prompt with AI...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+
+    const styleData = GENERATOR_CONFIG.ART_STYLES.find(s => s.id === genState.style);
+    const compData  = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
+    const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
+    const bgData    = GENERATOR_CONFIG.BACKGROUNDS.find(b => b.id === genState.background);
+    const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
+
+    const promptResult = await generateMasterPrompt({
+      composition:      compData?.label        || genState.composition,
+      frame:            frameData?.ratio        || genState.frame,
+      styleId:          genState.style,
+      styleDescription: styleData?.description || genState.style,
+      backgroundDesc:   bgData?.description    || genState.background,
+      backgroundId:     genState.background,
+      traits:           traitData,
+    }, customApiKey);
+
+    if (!promptResult.success || !promptResult.prompt) {
+      setImageGenState(s => ({ ...s, status: 'error', message: promptResult.error || 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
+      return;
+    }
+
+    setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: promptResult.prompt, rawInput: null, attempt: 0 });
+  }, [genState]);
+
   return (
     <main className="relative flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
 
@@ -182,6 +249,7 @@ export default function Home() {
         <Dock
           onDiceClick={randomSeedGen}
           onGenerateClick={handleGenerate}
+          onPromptOnlyClick={handlePromptOnly}
           onSettingsClick={() => setSettingsOpen(true)}
           onScreenChange={setScreen}
           screen={screen}

@@ -1,8 +1,9 @@
-import { Dices, Sparkles, Settings, RefreshCw, Wand2, Images } from 'lucide-react';
+import { Dices, Sparkles, Settings, RefreshCw, Wand2, Images, FileText } from 'lucide-react';
 
 interface DockProps {
   onDiceClick?: () => void;
   onGenerateClick?: () => void;
+  onPromptOnlyClick?: () => void;
   onSettingsClick?: () => void;
   onScreenChange?: (screen: 'create' | 'library') => void;
   screen?: 'create' | 'library';
@@ -12,6 +13,7 @@ interface DockProps {
 export default function Dock({
   onDiceClick,
   onGenerateClick,
+  onPromptOnlyClick,
   onSettingsClick,
   onScreenChange,
   screen = 'create',
@@ -48,9 +50,23 @@ export default function Dock({
         </>
       )}
 
-      {/* ── Main Generate button (hidden in library) ── */}
+      {/* ── Main Generate button + Prompt-Only button (hidden in library) ── */}
       {!inLibrary && (
         <>
+          <button
+            type="button"
+            title={generating ? 'Generating…' : 'Prompt only'}
+            onClick={onPromptOnlyClick}
+            disabled={generating}
+            className={`p-2.5 rounded-xl border transition-all duration-300 ${
+              generating
+                ? 'bg-white/3 border-white/5 text-white/15 cursor-not-allowed'
+                : 'bg-white/5 border-white/10 text-white/40 hover:text-accent hover:border-accent/30 hover:bg-accent/5'
+            }`}
+          >
+            <FileText size={16} strokeWidth={1.5} />
+          </button>
+
           <button
             type="button"
             title={generating ? 'Generating…' : 'Generate'}

@@ -21,6 +21,7 @@ export type GenerationStatus =
   | 'generating_prompt'
   | 'generating_image'
   | 'done'
+  | 'prompt_done'
   | 'error';
 
 export interface ImageGenState {
