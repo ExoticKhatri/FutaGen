@@ -113,7 +113,7 @@ NOT: anime line-art, digital cel shading, cartoon outlines, flat illustration st
 
 export async function generateMasterPrompt(payload: PromptRequest, customApiKey?: string) {
   try {
-    const apiKey = customApiKey || process.env.OPENAI_API_KEY;
+    const apiKey = customApiKey;
     if (!apiKey) {
       return { success: false, error: "OpenAI API Key is missing. Please set it in Settings.", rawInput: "" };
     }

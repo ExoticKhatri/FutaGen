@@ -16,7 +16,7 @@ const FRAME_SIZE_MAP: Record<string, string> = {
 const MAX_PROMPT_CHARS = 3900;
 
 export async function generateImage(prompt: string, frame: string, customApiKey?: string) {
-  const apiKey = customApiKey || process.env.OPENAI_API_KEY;
+  const apiKey = customApiKey;
   if (!apiKey) {
     return { success: false, error: "OpenAI API Key is missing. Please set it in Settings." };
   }
