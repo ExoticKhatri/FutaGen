@@ -109,6 +109,17 @@ NOT: anime line-art, digital cel shading, cartoon outlines, flat illustration st
 - Use terms like: "hyper-realistic photography", "cinematic Chiaroscuro lighting", "visible skin pores", "fine textures", "85mm prime lens depth of field", "natural reflections", "organic color grading".
 - AVOID: "outlines", "linework", "cel shading", "flat colors", "cartoon styles", "drawing", "painting".`,
   },
+  ghibli: {
+    label: "Ghibli",
+    tail: "Masterpiece Quality: Studio Ghibli hand-drawn illustration, warm organic color palette, soft thick clean outlines, gentle cel shading with warm ambient light fill, lush painterly textures, Hayao Miyazaki character art quality, whimsical magical atmosphere.",
+    reference: `TARGET AESTHETIC — the final image must look like this description:
+A breathtaking Studio Ghibli hand-drawn character illustration. The linework consists of soft, confident, slightly thick clean outlines with gentle organic weight variation — the kind that feels lovingly hand-drawn without being sketchy. Shading is gentle and warm, using simple cel shading with soft ambient light fill that evokes the feeling of sunlight filtering through leaves. Colors are rich yet natural and slightly muted — warm earthy tones, mossy greens, dusty roses, and golden ambers — with a magical lived-in quality. Skin is rendered with soft, minimal shading using warm peachy tones and a gentle natural glow. Hair has smooth flowing volume with soft highlight shapes. The overall image radiates warmth, life, and a quiet magical energy reminiscent of Spirited Away, Princess Mononoke, or Howl's Moving Castle.
+The overall impression is: hand-drawn Studio Ghibli illustration, warm organic palette, soft gentle shading, magical whimsical atmosphere, Hayao Miyazaki quality.
+NOT: glossy wet textures, high-specular glistening highlights, bold heavy comic inks, photorealistic photography, cold digital gradients, harsh high-contrast shading, dripping slime effects.`,
+    guidelines: `STYLE LANGUAGE RULES:
+- Use terms like: "Studio Ghibli hand-drawn style", "soft thick clean outlines", "warm organic color palette", "gentle cel shading", "warm ambient light fill", "lush painterly textures", "whimsical magical atmosphere", "Miyazaki illustration quality", "soft peachy skin tones", "natural flowing hair volume".
+- AVOID: "glistening wet sheen", "high-specular highlights", "bold black digital outlines", "dripping liquid", "cold digital gradients", "photorealism", "heavy comic book inks".`,
+  },
 };
 
 export async function generateMasterPrompt(payload: PromptRequest, customApiKey?: string) {
