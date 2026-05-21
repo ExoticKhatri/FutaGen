@@ -139,62 +139,64 @@ export default function Library() {
       {/* Lightbox */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-2 md:p-6"
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative flex flex-col lg:flex-row gap-6 max-w-5xl w-full max-h-full overflow-hidden"
+            className="relative w-full h-full max-w-5xl flex flex-col lg:flex-row gap-4 overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            {/* Image */}
-            <div className="flex-1 min-w-0 flex items-center justify-center overflow-auto relative">
+            {/* Image Container - Full screen pinch-zoom area on mobile */}
+            <div className="flex-1 min-w-0 flex items-center justify-center overflow-auto relative bg-black/50 rounded">
               <Image
                 src={selected.url}
                 alt={selected.seed}
                 fill
-                className="max-h-[75vh] w-auto border border-white/10 object-contain"
-                style={{ touchAction: 'pinch-zoom' }}
+                className="max-h-[85vh] md:max-h-[75vh] w-auto border border-white/10 object-contain"
+                style={{ touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none' }}
               />
             </div>
 
             {/* Meta panel */}
-            <div className="w-full lg:w-72 shrink-0 flex flex-col gap-3 font-mono overflow-y-auto custom-scrollbar">
+            <div className="w-full lg:w-80 shrink-0 flex flex-col gap-3 font-mono overflow-y-auto custom-scrollbar bg-black/40 rounded p-3 lg:p-4">
 
               {/* Top actions row */}
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => downloadImage(selected.url, selected.id)}
                     title="Download"
-                    className="flex items-center gap-1.5 px-2 py-1.5 text-white/40 hover:text-white border border-white/10 hover:border-white/30 transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-2 md:px-2 md:py-1.5 text-white/40 hover:text-white border border-white/10 hover:border-white/30 transition-colors active:scale-95"
                   >
-                    <Download size={11} />
-                    <span className="text-[8px] font-bold">DOWNLOAD</span>
+                    <Download size={12} className="md:hidden" />
+                    <Download size={11} className="hidden md:block" />
+                    <span className="text-[8px] font-bold hidden sm:inline">DL</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(selected.id)}
                     disabled={deleting}
                     title={confirmDelete === selected.id ? 'Click again to confirm' : 'Delete'}
-                    className={`flex items-center gap-1.5 px-2 py-1.5 border transition-colors disabled:opacity-30 ${
+                    className={`flex items-center gap-1.5 px-2.5 py-2 md:px-2 md:py-1.5 border transition-colors disabled:opacity-30 active:scale-95 ${
                       confirmDelete === selected.id
                         ? 'text-red-400 border-red-400/40 animate-pulse'
                         : 'text-white/40 hover:text-red-400 border-white/10 hover:border-red-400/30'
                     }`}
                   >
-                    <Trash2 size={11} />
-                    <span className="text-[8px] font-bold">
-                      {confirmDelete === selected.id ? 'CONFIRM' : 'DELETE'}
+                    <Trash2 size={12} className="md:hidden" />
+                    <Trash2 size={11} className="hidden md:block" />
+                    <span className="text-[8px] font-bold hidden sm:inline">
+                      {confirmDelete === selected.id ? 'OK' : 'DEL'}
                     </span>
                   </button>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
-                  className="p-1 text-white/30 hover:text-white transition-colors"
+                  className="p-2 text-white/30 hover:text-white transition-colors active:scale-95"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
               </div>
 

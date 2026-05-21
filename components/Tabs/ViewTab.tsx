@@ -146,29 +146,39 @@ export default function ViewTab({ imageGenState }: ViewTabProps) {
       {/* ── ZOOM LIGHTBOX ── */}
       {zoomed && imageGenState.imageUrl && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/98 flex items-center justify-center"
           onClick={() => setZoomed(false)}
         >
-          <button
-            type="button"
-            aria-label="Close zoom"
-            onClick={() => setZoomed(false)}
-            className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors z-10"
-          >
-            <X size={20} />
-          </button>
-          <button
-            type="button"
-            title="Download"
-            onClick={e => { e.stopPropagation(); downloadImage(); }}
-            className="absolute top-4 right-14 p-2 text-white/40 hover:text-white transition-colors z-10"
-          >
-            <Download size={18} />
-          </button>
+          {/* Control buttons - better mobile sizing */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 md:p-4 bg-gradient-to-b from-black/60 to-transparent">
+            <div className="text-[8px] text-white/40 tracking-widest">PINCH TO ZOOM</div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                title="Download"
+                onClick={e => { e.stopPropagation(); downloadImage(); }}
+                className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10 hover:border-white/30 rounded transition-all active:scale-95"
+              >
+                <Download size={18} className="md:hidden" />
+                <Download size={16} className="hidden md:block" />
+              </button>
+              <button
+                type="button"
+                aria-label="Close zoom"
+                onClick={() => setZoomed(false)}
+                className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10 hover:border-white/30 rounded transition-all active:scale-95"
+              >
+                <X size={18} className="md:hidden" />
+                <X size={16} className="hidden md:block" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Image container with full pinch-zoom support */}
           <div
-            className="w-full h-full overflow-auto flex items-center justify-center p-4"
+            className="w-full h-full overflow-auto flex items-center justify-center p-3 md:p-4"
             onClick={e => e.stopPropagation()}
-            style={{ touchAction: 'pinch-zoom' }}
+            style={{ touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <Image
               src={imageGenState.imageUrl}
@@ -176,7 +186,7 @@ export default function ViewTab({ imageGenState }: ViewTabProps) {
               width={2048}
               height={2048}
               unoptimized
-              style={{ maxHeight: '95vh', width: 'auto', cursor: 'zoom-out' }}
+              style={{ maxHeight: '90vh', width: 'auto', cursor: 'zoom-out' }}
               onClick={() => setZoomed(false)}
             />
           </div>
