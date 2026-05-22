@@ -14,7 +14,7 @@ import {
 } from '@/types/data';
 import { TraitCategory, TRAIT_CATEGORIES } from '@/types/traits';
 import { fetchSpecificEntryColumn } from '@/actions/db_fetch';
-import { generateMasterPrompt } from '@/actions/ai/promptGen';
+import { buildCharacterPrompt, applyArtStyle, sanitizePrompt } from '@/actions/ai/promptGen';
 import { generateImage } from '@/actions/ai/imageGen';
 import { uploadToCloudinary } from '@/actions/cloudinary';
 import { GENERATOR_CONFIG, FEATURE_FLAGS } from '@/lib/config';
@@ -30,6 +30,53 @@ export default function Home() {
 
   const randomSeedGen = () => seedEditorRef.current?.triggerRandomize();
   const isGenerating  = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
+
+  // Runs all 3 prompt-generation stages with live status updates.
+  // Returns the final prompt string, or null if any stage failed.
+  const runPromptPipeline = useCallback(async (
+    traitData: Record<string, string | string[]>,
+  ): Promise<{ prompt: string; rawInput: string } | null> => {
+    const compData  = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
+    const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
+    const bgData    = GENERATOR_CONFIG.BACKGROUNDS.find(b => b.id === genState.background);
+    const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
+    const isWhiteBg = !genState.background || genState.background === 'plain_white';
+
+    // Stage 1 — Build character description
+    setImageGenState(s => ({ ...s, message: 'Stage 1 / 3 — Building character description...' }));
+    const s1 = await buildCharacterPrompt({
+      composition:    compData?.label       || genState.composition,
+      frame:          frameData?.ratio      || genState.frame,
+      backgroundDesc: bgData?.description   || genState.background,
+      traits:         traitData,
+    }, customApiKey);
+    if (!s1.success || !s1.prompt) {
+      setImageGenState(s => ({ ...s, status: 'error', message: s1.error || 'Stage 1 failed.' }));
+      return null;
+    }
+
+    // Stage 2 — Apply art style
+    setImageGenState(s => ({ ...s, message: 'Stage 2 / 3 — Applying art style...' }));
+    const s2 = await applyArtStyle({
+      draft:     s1.prompt,
+      styleId:   genState.style,
+      isWhiteBg,
+    }, customApiKey);
+    if (!s2.success || !s2.prompt) {
+      setImageGenState(s => ({ ...s, status: 'error', message: s2.error || 'Stage 2 failed.' }));
+      return null;
+    }
+
+    // Stage 3 — Safety check
+    setImageGenState(s => ({ ...s, message: 'Stage 3 / 3 — Safety check...' }));
+    const s3 = await sanitizePrompt({ draft: s2.prompt }, customApiKey);
+    if (!s3.success || !s3.prompt) {
+      setImageGenState(s => ({ ...s, status: 'error', message: s3.error || 'Stage 3 failed.' }));
+      return null;
+    }
+
+    return { prompt: s3.prompt, rawInput: s1.rawInput ?? '' };
+  }, [genState]);
 
   const handleGenerate = useCallback(async () => {
     if (!genState.traits) return;
@@ -75,32 +122,14 @@ export default function Home() {
       });
     }
 
-    // ── Step 2: Generate master prompt ────────────────────────────────────
-    setImageGenState({ status: 'generating_prompt', message: 'Assembling master prompt with AI...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
-
-    const styleData = GENERATOR_CONFIG.ART_STYLES.find(s => s.id === genState.style);
-    const compData  = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
-    const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
-    const bgData    = GENERATOR_CONFIG.BACKGROUNDS.find(b => b.id === genState.background);
+    // ── Step 2: Generate master prompt (3 stages) ────────────────────────
+    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
 
     const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
+    const pipelineResult = await runPromptPipeline(traitData);
+    if (!pipelineResult) return;
 
-    const promptResult = await generateMasterPrompt({
-      composition:      compData?.label        || genState.composition,
-      frame:            frameData?.ratio        || genState.frame,
-      styleId:          genState.style,
-      styleDescription: styleData?.description || genState.style,
-      backgroundDesc:   bgData?.description    || genState.background,
-      backgroundId:     genState.background,
-      traits:           traitData,
-    }, customApiKey);
-
-    if (!promptResult.success || !promptResult.prompt) {
-      setImageGenState(s => ({ ...s, status: 'error', message: promptResult.error || 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
-      return;
-    }
-
-    const prompt = promptResult.prompt;
+    const prompt = pipelineResult.prompt;
 
     // ── Step 3: Generate image with up to MAX_RETRIES attempts ────────────
     setImageGenState(s => ({ ...s, status: 'generating_image', message: `Generating image — attempt 1 / ${MAX_RETRIES}...`, prompt, attempt: 1 }));
@@ -186,30 +215,12 @@ export default function Home() {
       });
     }
 
-    setImageGenState({ status: 'generating_prompt', message: 'Assembling master prompt with AI...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
 
-    const styleData = GENERATOR_CONFIG.ART_STYLES.find(s => s.id === genState.style);
-    const compData  = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
-    const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
-    const bgData    = GENERATOR_CONFIG.BACKGROUNDS.find(b => b.id === genState.background);
-    const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
+    const pipelineResult = await runPromptPipeline(traitData);
+    if (!pipelineResult) return;
 
-    const promptResult = await generateMasterPrompt({
-      composition:      compData?.label        || genState.composition,
-      frame:            frameData?.ratio        || genState.frame,
-      styleId:          genState.style,
-      styleDescription: styleData?.description || genState.style,
-      backgroundDesc:   bgData?.description    || genState.background,
-      backgroundId:     genState.background,
-      traits:           traitData,
-    }, customApiKey);
-
-    if (!promptResult.success || !promptResult.prompt) {
-      setImageGenState(s => ({ ...s, status: 'error', message: promptResult.error || 'AI prompt generation failed.', rawInput: promptResult.rawInput ?? null }));
-      return;
-    }
-
-    setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: promptResult.prompt, rawInput: null, attempt: 0 });
+    setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: pipelineResult.prompt, rawInput: null, attempt: 0 });
   }, [genState]);
 
   return (
