@@ -47,7 +47,7 @@ export const shouldersLore: LoreLibrary = {
   '043': { id: '017', description: 'Perfectly mirrored left and right, zero deviation.' },
   '044': { id: '018', description: 'Static and tense, as if perpetually ready for a struggle.' },
   '045': { id: '019', description: 'Impenetrable mass, looking solid and heavy.' },
-  '046': { id: '01a', description: 'Thin and elongated, reaching out like branches.' },
+  '046': { id: '01a', description: 'Thin and elongated.' },
   '047': { id: '01b', description: 'Raw and unrefined, with uneven muscle distribution.' },
   '048': { id: '01c', description: 'Sharp, chiseled edges that catch the light dramatically.' },
   '049': { id: '01d', description: 'Supple and flexible, looking like liquid in motion.' },

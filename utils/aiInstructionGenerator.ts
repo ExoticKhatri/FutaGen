@@ -83,8 +83,8 @@ export function generateAIInstructionPrompt(data: TraitData): string {
     .join('\n');
 
   const specialRule = data.special?.length
-    ? `Special traits are active. Integrate each special feature naturally without duplicating anatomy or overwhelming the silhouette.`
-    : 'No special traits are active. Do not invent extra mutations or accessory traits.';
+    ? `Integrate each special feature naturally without duplicating anatomy or overwhelming the silhouette.`
+    : '';
 
   return `You are a specialized prompt engineer for high-end anime image generation.
 Your job is to convert the mapped character data below into one seamless, production-ready final image prompt for a single demon lady.

@@ -98,7 +98,7 @@ export const chestDisplay: DisplayLibrary = {
   '094': { id: '02m', name: 'Breathtaking' },
   '095': { id: '02n', name: 'Divine' },
   '096': { id: '02o', name: 'Unrefined' },
-  '097': { id: '02p', name: 'Nebulous' },
+  '097': { id: '02p', name: 'MultiBrests' },
   '098': { id: '02q', name: 'Ultimate' },
   '099': { id: '02r', name: 'Chaos-Core' },
 };

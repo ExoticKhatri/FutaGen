@@ -98,7 +98,7 @@ export const chestLore: LoreLibrary = {
   '094': { id: '02m', description: 'So aesthetically perfect it causes physical pain to behold.' },
   '095': { id: '02n', description: 'Made of light and celestial matter; blindingly bright.' },
   '096': { id: '02o', description: 'Wild and uneven, showing raw, primal power.' },
-  '097': { id: '02p', description: 'Cloudy and indistinct, as if made of dark nebulae.' },
+  '097': { id: '02p', description: 'three brests.' },
   '098': { id: '02q', description: 'The final, ultimate form of demonic femininity.' },
   '099': { id: '02r', description: 'A swirling chaos of eyes and mouths where the chest should be.' },
 };
