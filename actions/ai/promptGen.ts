@@ -101,16 +101,16 @@ NOT: anime line-art, digital cel shading, cartoon outlines, flat illustration st
 USE: "hyper-realistic photography", "cinematic Chiaroscuro lighting", "visible skin pores", "fine textures", "85mm prime lens depth of field", "natural reflections", "organic color grading".
 AVOID: "outlines", "linework", "cel shading", "flat colors", "cartoon styles", "drawing", "painting".`,
   },
-  ghibli: {
-    label: "Ghibli",
-    tail: "Masterpiece Quality: Studio Ghibli hand-drawn illustration, warm organic color palette, soft thick clean outlines, gentle cel shading with warm ambient light fill, lush painterly textures, Hayao Miyazaki character art quality, whimsical magical atmosphere.",
+  minimal: {
+    label: "Minimal",
+    tail: "Masterpiece Quality: minimalist cartoon illustration, bold clean black outlines, flat solid colors, zero shading, zero texture, simple iconic shapes, strong memorable silhouette, easy-to-read character design.",
     reference: `TARGET AESTHETIC:
-A breathtaking Studio Ghibli hand-drawn character illustration. Linework consists of soft, confident, slightly thick clean outlines with gentle organic weight variation — lovingly hand-drawn without being sketchy. Shading is gentle and warm, using simple cel shading with soft ambient light fill evoking sunlight through leaves. Colors are rich yet natural and slightly muted — warm earthy tones, mossy greens, dusty roses, golden ambers — with a magical lived-in quality. Skin is soft with minimal shading using warm peachy tones. Hair has smooth flowing volume with soft highlight shapes. Radiates warmth, life, and quiet magical energy reminiscent of Spirited Away, Princess Mononoke, Howl's Moving Castle.
-Overall impression: hand-drawn Studio Ghibli illustration, warm organic palette, soft gentle shading, magical whimsical atmosphere, Miyazaki quality.
-NOT: glossy wet textures, high-specular highlights, bold heavy comic inks, photorealism, cold digital gradients, harsh high-contrast shading, dripping slime effects.`,
+A clean minimalist cartoon character illustration. Linework is bold, confident, and uniform — simple closed outlines with no texture or weight variation. Zero shading, zero gradients, zero rendering detail. Colors are flat solid fills chosen for instant readability: limited palette of 3–5 bold, distinct colors. Every body part — face, hair, outfit, horns — is reduced to its most iconic geometric shape. Eyes are simple dots or small shapes. Hair is a clean solid silhouette. The character reads instantly as a strong recognizable figure even at thumbnail size, like a timeless cartoon mascot.
+Overall impression: flat minimalist cartoon, bold solid outlines, 4-color palette, zero detail, strong silhouette readability.
+NOT: shading, gradients, texture, painterly strokes, fine linework, cel shading highlights, photorealism, detailed rendering, multiple tones per area.`,
     guidelines: `STYLE VOCABULARY:
-USE: "Studio Ghibli hand-drawn style", "soft thick clean outlines", "warm organic color palette", "gentle cel shading", "warm ambient light fill", "lush painterly textures", "whimsical magical atmosphere", "Miyazaki illustration quality", "soft peachy skin tones", "natural flowing hair volume".
-AVOID: "glistening wet sheen", "high-specular highlights", "bold black digital outlines", "dripping liquid", "cold digital gradients", "photorealism", "heavy comic book inks".`,
+USE: "minimalist cartoon illustration", "bold uniform outlines", "flat solid colors", "zero shading", "simple iconic shapes", "limited color palette", "strong silhouette", "geometric simplified forms", "clean readable design".
+AVOID: "shading", "gradients", "cel shading", "textures", "detailed linework", "photorealism", "painterly", "highlights", "shadow rendering", "complex details".`,
   },
 };
 

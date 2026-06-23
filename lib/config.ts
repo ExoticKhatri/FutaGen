@@ -93,9 +93,9 @@ ART_STYLES: [
     description: 'Hyper-realistic photography style. Shot on 85mm lens f/1.8. Visible skin texture, natural eye reflections, Chiaroscuro lighting, 8K resolution, cinematic color grading.',
   },
   {
-    id: 'ghibli',
-    label: 'Ghibli',
-    description: 'Studio Ghibli hand-drawn aesthetic. Warm painterly backgrounds, soft thick outlines, lush organic textures, gentle cel shading with warm ambient light, expressive large eyes, natural muted-yet-rich color palette, magical whimsical atmosphere. Hayao Miyazaki illustration quality.',
+    id: 'minimal',
+    label: 'Minimal',
+    description: 'Minimalist cartoon illustration. Bold clean outlines, flat solid colors, zero texture, zero shading gradients. Every feature reduced to its simplest iconic shape — strong readable silhouette, like a timeless memorable cartoon character. Easy to read at a glance.',
   },
 ],
 
