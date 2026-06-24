@@ -19,7 +19,6 @@ import { generateImage } from '@/actions/ai/imageGen';
 import { uploadToCloudinary } from '@/actions/cloudinary';
 import { GENERATOR_CONFIG, FEATURE_FLAGS } from '@/lib/config';
 
-const MAX_RETRIES = 4;
 
 export default function Home() {
   const seedEditorRef = useRef<{ triggerRandomize: () => void } | null>(null);
@@ -85,7 +84,7 @@ export default function Home() {
 
     if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
       // ── Step 1 (optional): Fetch trait descriptions from Supabase ─────────
-      setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+      setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
 
       try {
         await Promise.all(
@@ -123,7 +122,7 @@ export default function Home() {
     }
 
     // ── Step 2: Generate master prompt (3 stages) ────────────────────────
-    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
 
     const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
     const pipelineResult = await runPromptPipeline(traitData);
@@ -131,48 +130,84 @@ export default function Home() {
 
     const prompt = pipelineResult.prompt;
 
-    // ── Step 3: Generate image with up to MAX_RETRIES attempts ────────────
-    setImageGenState(s => ({ ...s, status: 'generating_image', message: `Generating image — attempt 1 / ${MAX_RETRIES}...`, prompt, attempt: 1 }));
+    // ── Step 3: Generate images in parallel ──────────────────────────────
+    const SLOT_COUNT = Math.min(5, Math.max(1, parseInt(localStorage.getItem('image_count') || '4')));
+    setImageGenState(s => ({
+      ...s,
+      status: 'generating_image',
+      message: `Generating ${SLOT_COUNT} images in parallel...`,
+      prompt,
+      attempt: 0,
+      slots: Array.from({ length: SLOT_COUNT }, () => ({
+        status: 'running' as const,
+        imageUrl: null,
+        error: null,
+      })),
+    }));
 
-    let lastError = '';
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      if (attempt > 1) {
-        setImageGenState(s => ({ ...s, message: `Retrying — attempt ${attempt} / ${MAX_RETRIES}...`, attempt }));
-      }
+    const slotResults: Array<{ success: boolean; imageUrl?: string; error?: string }> = new Array(SLOT_COUNT);
 
-      const result = await generateImage(prompt, genState.frame, customApiKey);
+    const generationPromises = Array.from({ length: SLOT_COUNT }, (_, i) =>
+      generateImage(prompt, genState.frame, customApiKey).then(result => {
+        slotResults[i] = result;
+        setImageGenState(s => ({
+          ...s,
+          slots: s.slots.map((slot, idx) =>
+            idx !== i ? slot
+              : result.success && result.imageUrl
+                ? { status: 'done' as const, imageUrl: result.imageUrl, error: null }
+                : { status: 'error' as const, imageUrl: null, error: result.error ?? 'Unknown error' }
+          ),
+        }));
+        return result;
+      })
+    );
 
-      if (result.success && result.imageUrl) {
-        setImageGenState({ status: 'done', message: 'Saving to library...', imageUrl: result.imageUrl, prompt, rawInput: null, attempt });
+    await Promise.allSettled(generationPromises);
 
-        const traitTitles = genState.traitTitles
-          ? Object.entries(genState.traitTitles)
-              .map(([k, v]) => `${k}:${Array.isArray(v) ? v.join('+') : v}`)
-              .join(', ')
-          : '';
+    const successUrls = slotResults
+      .filter(r => r?.success && r.imageUrl)
+      .map(r => r.imageUrl!);
 
+    if (successUrls.length === 0) {
+      setImageGenState(s => ({ ...s, status: 'error', message: `All ${SLOT_COUNT} generations failed.` }));
+      return;
+    }
+
+    setImageGenState(s => ({
+      ...s,
+      status: 'done',
+      imageUrl: successUrls[0],
+      message: `${successUrls.length} / ${SLOT_COUNT} generated. Saving to library...`,
+    }));
+
+    const traitTitles = genState.traitTitles
+      ? Object.entries(genState.traitTitles)
+          .map(([k, v]) => `${k}:${Array.isArray(v) ? v.join('+') : v}`)
+          .join(', ')
+      : '';
+
+    Promise.all(
+      successUrls.map(imageUrl =>
         uploadToCloudinary({
-          imageDataUrl: result.imageUrl,
+          imageDataUrl: imageUrl,
           prompt,
           seed:         genState.seed,
           ratio:        genState.frame,
           composition:  genState.composition,
           style:        genState.style,
           traitTitles,
-        }).then(up => {
-          setImageGenState(s => ({
-            ...s,
-            message: up.success ? 'Saved to library.' : `Ready (save failed: ${up.error})`,
-          }));
-        });
-
-        return;
-      }
-
-      lastError = result.error || 'Unknown error';
-    }
-
-    setImageGenState(s => ({ ...s, status: 'error', message: `Failed after ${MAX_RETRIES} attempts. ${lastError}` }));
+        })
+      )
+    ).then(uploads => {
+      const failCount = uploads.filter(u => !u.success).length;
+      setImageGenState(s => ({
+        ...s,
+        message: failCount === 0
+          ? `${successUrls.length} / ${SLOT_COUNT} generated. Saved to library.`
+          : `${successUrls.length} / ${SLOT_COUNT} generated. ${failCount} save(s) failed.`,
+      }));
+    });
   }, [genState]);
 
   const handlePromptOnly = useCallback(async () => {
@@ -181,7 +216,7 @@ export default function Home() {
     const traitData: Record<string, string | string[]> = {};
 
     if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
-      setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+      setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
       try {
         await Promise.all(
           TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
@@ -215,12 +250,12 @@ export default function Home() {
       });
     }
 
-    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0 });
+    setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
 
     const pipelineResult = await runPromptPipeline(traitData);
     if (!pipelineResult) return;
 
-    setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: pipelineResult.prompt, rawInput: null, attempt: 0 });
+    setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: pipelineResult.prompt, rawInput: null, attempt: 0, slots: [] });
   }, [genState]);
 
   return (

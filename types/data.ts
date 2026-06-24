@@ -24,6 +24,14 @@ export type GenerationStatus =
   | 'prompt_done'
   | 'error';
 
+export type SlotStatus = 'pending' | 'running' | 'done' | 'error';
+
+export interface ImageSlot {
+  status: SlotStatus;
+  imageUrl: string | null;
+  error: string | null;
+}
+
 export interface ImageGenState {
   status: GenerationStatus;
   message: string;
@@ -31,6 +39,7 @@ export interface ImageGenState {
   prompt: string | null;
   rawInput: string | null;
   attempt: number;
+  slots: ImageSlot[];
 }
 
 export interface GeneratorState {
@@ -60,4 +69,5 @@ export const INITIAL_IMAGE_GEN_STATE: ImageGenState = {
   prompt: null,
   rawInput: null,
   attempt: 0,
+  slots: [],
 };

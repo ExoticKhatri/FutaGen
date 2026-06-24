@@ -14,7 +14,7 @@ export const TRAIT_SPECIFIC_PROMPTS: Record<TraitCategory, string> = {
 
   outfit: `
     ISOLATION RULE: Focus ONLY on minimalist attire.
-    - CONSTRAINT: Coverage must be limited to 20% to 30% of the body.
+    - CONSTRAINT: Coverage must be limited to 30% to 40% of the body.
     - CONSTRAINT: NO FOOTWEAR. The character must be barefoot in all descriptions.
     - Focus on materials (leather, silk, chains, magical energy) and how they sit on the anatomy.`,
 
