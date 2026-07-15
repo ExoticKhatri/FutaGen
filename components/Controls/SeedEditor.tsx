@@ -2,19 +2,21 @@
 
 import React, { useState, useImperativeHandle, forwardRef, useEffect, useCallback, useRef } from 'react';
 import { Hash, RefreshCcw } from 'lucide-react';
-import { GENERATOR_CONFIG } from '@/lib/config';
 import { generateRandomSeed } from '@/utils/seedGen';
 
 interface SeedEditorProps {
   onSeedUpdate: (newSeed: string) => void;
   currentSeed?: string; // Accept the external seed from ControlPanel
+  /** Required length for the current character count (characterCount * UNIT_LENGTH) */
+  maxLength: number;
+  /** How many characters the randomize button should generate traits for */
+  characterCount: number;
   disable?: boolean;
 }
 
 const SeedEditor = forwardRef((props: SeedEditorProps, ref) => {
-  const { onSeedUpdate, currentSeed, disable = false } = props; 
-  const { MAX_LENGTH } = GENERATOR_CONFIG.SEED;
-  
+  const { onSeedUpdate, currentSeed, maxLength: MAX_LENGTH, characterCount, disable = false } = props;
+
   // Initialize with currentSeed if available, otherwise empty
   const [internalSeed, setInternalSeed] = useState(currentSeed || "");
 
@@ -42,11 +44,11 @@ const SeedEditor = forwardRef((props: SeedEditorProps, ref) => {
 
   const handleRandomize = useCallback(() => {
     if (disable) return;
-    
-    const newSeed = generateRandomSeed();
+
+    const newSeed = generateRandomSeed(characterCount);
     setInternalSeed(newSeed);
     onSeedUpdateRef.current(newSeed);
-  }, [disable]); 
+  }, [disable, characterCount]);
 
   useImperativeHandle(ref, () => ({
     triggerRandomize: () => {

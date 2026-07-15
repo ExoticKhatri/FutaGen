@@ -10,9 +10,15 @@ export const FEATURE_FLAGS = {
 
 export const GENERATOR_CONFIG = {
   SEED: {
-    MAX_LENGTH: 64,
-    MIN_LENGTH: 64,
-  // Defines where each trait starts and how many characters it consumes
+    // Characters consumed to encode ONE character's full trait set
+    // (9 standard traits x 2 + 1 special_count + 3 special slots x 2 = 25).
+    // Total seed length = UNIT_LENGTH * characterCount.
+    UNIT_LENGTH: 25,
+    MIN_CHARACTERS: 1,
+    MAX_CHARACTERS: 4,
+  // Defines where each trait starts *within a single character's block*
+  // and how many characters it consumes. Shift by (characterIndex * UNIT_LENGTH)
+  // to locate a given character's block inside the full seed.
     TRAIT_MAP: {
       body:    { offset: 0,  length: 2 },
       eyes:    { offset: 2,  length: 2 },

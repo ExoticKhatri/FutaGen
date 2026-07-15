@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { GENERATOR_CONFIG } from '@/lib/config';
+import { seedLengthForCount } from '@/lib/seedEngine';
+import { resizeSeedForCharacterCount } from '@/utils/seedGen';
 import { GeneratorState, MappedTraits, TraitTitles } from '@/types/data';
 
 // Sub-components
@@ -10,6 +12,7 @@ import CompositionSelector from './Controls/CompositionSelector';
 import FrameSelector from './Controls/FrameSelector';
 import ArtStyleSelector from './Controls/StyleSelector';
 import BackgroundSelector from './Controls/BackgroundSelector';
+import CharacterCountSelector from './Controls/CharacterCountSelector';
 import TraitGrid from './Controls/TraitSelector';
 
 interface ControlPanelProps {
@@ -28,9 +31,13 @@ export default function ControlPanel({
   const [frame, setFrame]         = useState(GENERATOR_CONFIG.FRAMES[0].id);
   const [style, setStyle]         = useState(GENERATOR_CONFIG.ART_STYLES[0].id);
   const [background, setBackground] = useState(GENERATOR_CONFIG.BACKGROUNDS[0].id);
+  const [characterCount, setCharacterCount] = useState(GENERATOR_CONFIG.SEED.MIN_CHARACTERS);
+  const [activeCharacterIndex, setActiveCharacterIndex] = useState(0);
 
   const [resolvedTraits, setResolvedTraits] = useState<MappedTraits | null>(null);
   const [resolvedTitles, setResolvedTitles] = useState<TraitTitles | null>(null);
+  const [charactersTraits, setCharactersTraits] = useState<MappedTraits[]>([]);
+  const [charactersTraitTitles, setCharactersTraitTitles] = useState<TraitTitles[]>([]);
 
   const internalRef = useRef<{ triggerRandomize: () => void } | null>(null);
   const seedEditorRef = externalRef || internalRef;
@@ -69,10 +76,13 @@ export default function ControlPanel({
       frame,
       style,
       background,
+      characterCount,
       traits: resolvedTraits,
       traitTitles: resolvedTitles,
+      charactersTraits,
+      charactersTraitTitles,
     });
-  }, [seed, comp, frame, style, background, resolvedTraits, resolvedTitles]);
+  }, [seed, comp, frame, style, background, characterCount, resolvedTraits, resolvedTitles, charactersTraits, charactersTraitTitles]);
 
   /**
    * TraitGrid calls this when:
@@ -83,6 +93,18 @@ export default function ControlPanel({
    */
   const handleTraitSeedChange = useCallback((newSeed: string) => {
     setSeed(newSeed);
+  }, []);
+
+  /**
+   * Changing the character count resizes the seed to match
+   * (characterCount * UNIT_LENGTH) — extending appends fresh random traits
+   * for the new character(s), shrinking truncates trailing ones. Also clamps
+   * the active-character tab so it never points past the new count.
+   */
+  const handleCharacterCountChange = useCallback((newCount: number) => {
+    setCharacterCount(newCount);
+    setSeed(prev => resizeSeedForCharacterCount(prev, newCount));
+    setActiveCharacterIndex(prev => Math.min(prev, newCount - 1));
   }, []);
 
   return (
@@ -101,6 +123,8 @@ export default function ControlPanel({
             ref={seedEditorRef}
             onSeedUpdate={setSeed}
             currentSeed={seed}
+            maxLength={seedLengthForCount(characterCount)}
+            characterCount={characterCount}
             disable={disable}
           />
           <CompositionSelector activeId={comp} setComp={setComp} disable={disable} />
@@ -111,6 +135,7 @@ export default function ControlPanel({
           <FrameSelector activeId={frame} setFrame={setFrame} disable={disable} />
           <BackgroundSelector activeId={background} setBackground={setBackground} disable={disable} />
           <ArtStyleSelector activeId={style} setStyle={setStyle} disable={disable} />
+          <CharacterCountSelector count={characterCount} setCount={handleCharacterCountChange} disable={disable} />
         </div>
 
         {/* SECTION 3: UNIFIED GENOME EDITOR */}
@@ -118,13 +143,19 @@ export default function ControlPanel({
           TraitGrid receives the current seed and resolves traits via modulo.
           When a dropdown changes it calls onSeedChange → handleTraitSeedChange
           which updates `seed` in ControlPanel → flows back into SeedEditor.
-          It also reports the resolved traits up via onResolvedTraits.
+          It also reports the resolved traits up via onResolvedTraits, both for
+          the character currently being edited and for the whole group.
         */}
         <TraitGrid
           seed={seed}
           onSeedChange={handleTraitSeedChange}
+          characterCount={characterCount}
+          activeCharacterIndex={activeCharacterIndex}
+          onActiveCharacterChange={setActiveCharacterIndex}
           onResolvedTraits={setResolvedTraits}
           onResolvedTitles={setResolvedTitles}
+          onResolvedAllTraits={setCharactersTraits}
+          onResolvedAllTitles={setCharactersTraitTitles}
           disabled={disable}
         />
 

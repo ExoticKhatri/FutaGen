@@ -48,8 +48,14 @@ export interface GeneratorState {
   frame: string;
   style: string;
   background: string;
+  /** How many characters the current seed encodes (group size). */
+  characterCount: number;
+  /** Traits for the character currently being edited in the Trait Selector. */
   traits: MappedTraits | null;
   traitTitles: TraitTitles | null;
+  /** Resolved traits for every character in the group, index-aligned to characterCount. */
+  charactersTraits: MappedTraits[];
+  charactersTraitTitles: TraitTitles[];
 }
 
 export const INITIAL_GENERATOR_STATE: GeneratorState = {
@@ -58,8 +64,11 @@ export const INITIAL_GENERATOR_STATE: GeneratorState = {
   frame: "portrait",
   style: "glistening_anime",
   background: "plain_white",
+  characterCount: 1,
   traits: null,
   traitTitles: null,
+  charactersTraits: [],
+  charactersTraitTitles: [],
 };
 
 export const INITIAL_IMAGE_GEN_STATE: ImageGenState = {

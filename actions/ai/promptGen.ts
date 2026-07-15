@@ -185,17 +185,35 @@ export interface CharacterPromptInput {
   composition:   string;
   frame:         string;
   backgroundDesc: string;
-  traits:        Record<string, string | string[]>;
+  /** One entry per character sharing the frame — index 0 is always present. */
+  characters:    Array<Record<string, string | string[]>>;
 }
 
 export interface ArtStyleInput {
-  draft:      string;
-  styleId:    string;
-  isWhiteBg:  boolean;
+  draft:          string;
+  styleId:        string;
+  isWhiteBg:      boolean;
+  /** How many characters share the frame — widens the rewrite's word budget. */
+  characterCount?: number;
 }
 
 export interface SafetyInput {
   draft: string;
+}
+
+// Per-character word budget shrinks as the group grows, so the combined
+// description (+ art-style rewrite + quality tail) stays under the
+// gpt-image-2 prompt ceiling (MAX_PROMPT_CHARS in actions/ai/imageGen.ts).
+const PER_CHARACTER_WORD_BUDGET: Record<number, { min: number; max: number }> = {
+  1: { min: 200, max: 250 },
+  2: { min: 160, max: 200 },
+  3: { min: 130, max: 160 },
+  4: { min: 110, max: 140 },
+};
+
+function wordBudgetFor(characterCount: number): { min: number; max: number } {
+  const per = PER_CHARACTER_WORD_BUDGET[characterCount] ?? PER_CHARACTER_WORD_BUDGET[4];
+  return { min: per.min * characterCount, max: per.max * characterCount };
 }
 
 // ── Stage 1: Build character description ─────────────────────────────────────
@@ -206,19 +224,28 @@ export async function buildCharacterPrompt(
 ): Promise<PromptStageResult> {
   if (!customApiKey) return { success: false, error: "OpenAI API Key is missing. Please set it in Settings." };
 
-  const { composition, frame, backgroundDesc, traits } = input;
+  const { composition, frame, backgroundDesc, characters } = input;
+  const count = characters.length;
+  const isGroup = count > 1;
+  const { min, max } = wordBudgetFor(count);
 
-  const traitsContext = Object.entries(traits)
-    .filter(([, val]) => (Array.isArray(val) ? val.length > 0 : val))
-    .map(([key, val]) => `  ${key.toUpperCase()}: ${Array.isArray(val) ? val.join(", ") : val}`)
-    .join("\n");
+  const charactersContext = characters
+    .map((traits, i) => {
+      const label = isGroup ? `CHARACTER ${i + 1}` : "CHARACTER";
+      const lines = Object.entries(traits)
+        .filter(([, val]) => (Array.isArray(val) ? val.length > 0 : val))
+        .map(([key, val]) => `    ${key.toUpperCase()}: ${Array.isArray(val) ? val.join(", ") : val}`)
+        .join("\n");
+      return `  ${label}:\n${lines}`;
+    })
+    .join("\n\n");
 
-  const system = `You are an expert fantasy character description writer for AI image generation.
-
-Write a concise, vivid image generation prompt for a demon lady character. Target length: 200–250 words maximum.
-
-STRUCTURE — follow this exact order, one sentence per section:
-1. Opening: shot type (${composition}), frame ratio (${frame}), single character only, no text, no watermarks, no shoes.
+  const structure = isGroup
+    ? `1. Opening: shot type (${composition}), frame ratio (${frame}), exactly ${count} characters in frame — no more, no fewer — each clearly distinct and separated in the composition, no text, no watermarks, no shoes.
+2. For EACH character in turn (Character 1 through Character ${count}), one focused passage covering in order: skin, face, hair, horns, body, outfit (30–40% coverage, no footwear), special traits if listed, and pose/expression — so each character reads as a complete, distinct being.
+3. GROUP COMPOSITION — describe how the ${count} characters are arranged relative to one another (e.g. side-by-side, staggered depth, interacting) and how they relate in scale and energy, so the group reads as one cohesive scene, not ${count} unrelated cutouts.
+4. BACKGROUND — describe this setting exactly: ${backgroundDesc}`
+    : `1. Opening: shot type (${composition}), frame ratio (${frame}), single character only, no text, no watermarks, no shoes.
 2. SKIN — colour, tone, texture, how light sits on it.
 3. FACE — the specific face traits described vividly and precisely.
 4. HAIR — style, movement, length, volume, colour.
@@ -227,13 +254,20 @@ STRUCTURE — follow this exact order, one sentence per section:
 7. OUTFIT — a fantasy costume covering 30–40% of the body. Describe its fabric, material, colours, and decorative embellishments ONLY. Never mention how much skin is visible or use skin-exposure language.
 8. SPECIAL TRAITS — integrate naturally if any are listed.
 9. POSE — body language, energy, expression.
-10. BACKGROUND — describe this setting exactly: ${backgroundDesc}
+10. BACKGROUND — describe this setting exactly: ${backgroundDesc}`;
+
+  const system = `You are an expert fantasy character description writer for AI image generation.
+
+Write a concise, vivid image generation prompt for ${isGroup ? `a group of exactly ${count} demon lady characters sharing one frame` : "a demon lady character"}. Target length: ${min}–${max} words maximum.
+
+STRUCTURE — follow this exact order:
+${structure}
 
 RULES:
 - Flowing vivid prose — no bullet points.
 - The outfit is always present — never an absence of clothing.
 - No footwear of any kind.
-- One character only.
+- ${isGroup ? `Exactly ${count} characters — never merge two characters into one, never add unlisted extras or background figures.` : "One character only."}
 - No extra limbs unless a SPECIAL trait explicitly demands it.
 - No art style terms at this stage — pure visual description only.
 - FORBIDDEN — never use: nude, naked, exposed, revealing, skin-tight, explicit, erotic, sexual, nsfw, undressed, seductive, sensual, provocative, topless, bottomless, nipples, genitals, cleavage, "leaves skin visible", "skin showing", "skin is visible", "clinging to her form", "allure", "much of her skin".
@@ -242,7 +276,7 @@ RULES:
 OUTPUT FORMAT — return only this JSON:
 { "prompt": "the character description" }`;
 
-  const user = `Generate the character description now using these specifications:
+  const user = `Generate the ${isGroup ? "group scene" : "character"} description now using these specifications:
 
 [FRAME & COMPOSITION]
 - Ratio: ${frame}
@@ -251,8 +285,8 @@ OUTPUT FORMAT — return only this JSON:
 [BACKGROUND]
 ${backgroundDesc}
 
-[CHARACTER TRAITS]
-${traitsContext}`;
+[${isGroup ? `${count} CHARACTERS` : "CHARACTER TRAITS"}]
+${charactersContext}`;
 
   try {
     const openai = new OpenAI({ apiKey: customApiKey });
@@ -277,14 +311,18 @@ export async function applyArtStyle(
 ): Promise<PromptStageResult> {
   if (!customApiKey) return { success: false, error: "OpenAI API Key is missing. Please set it in Settings." };
 
-  const { draft, styleId, isWhiteBg } = input;
+  const { draft, styleId, isWhiteBg, characterCount = 1 } = input;
   const config    = STYLE_CONFIGS[styleId] ?? STYLE_CONFIGS["glistening_anime"];
   const styleName = config.label;
   const qualityTail = isWhiteBg ? `${config.tail} Pure white background.` : config.tail;
+  const isGroup = characterCount > 1;
+  // Rewrite budget grows with group size but is capped so the final prompt
+  // (rewrite + quality tail) stays under gpt-image-2's length ceiling.
+  const rewriteWordCap = Math.min(350 + Math.max(0, characterCount - 1) * 120, 700);
 
   const system = `You are an art direction specialist for ${styleName} illustration.
 
-TASK: Take the character description below and REWRITE it so every visual element is described in ${styleName} rendering vocabulary. Keep the rewritten prompt under 350 words (before the quality tail).
+TASK: Take the ${isGroup ? "group scene" : "character"} description below and REWRITE it so every visual element is described in ${styleName} rendering vocabulary. Keep the rewritten prompt under ${rewriteWordCap} words (before the quality tail).
 
 WHAT TO CHANGE:
 - How skin texture, tone, and highlights are described → translate to ${styleName} style.
@@ -293,8 +331,10 @@ WHAT TO CHANGE:
 - The opening line MUST begin with exactly: "${styleName} style:"
 
 WHAT NOT TO CHANGE:
-- The character's traits (face shape, horn type, hair colour, body type, outfit type).
-- Pose, expression, and energy.
+- ${isGroup
+    ? `Each of the ${characterCount} characters' traits (face shape, horn type, hair colour, body type, outfit type) and their individual identities — never merge, swap, or blend traits between characters.`
+    : "The character's traits (face shape, horn type, hair colour, body type, outfit type)."}
+- Pose, expression, and energy.${isGroup ? " Their arrangement and relative positioning in the scene." : ""}
 - Background description.
 - Overall narrative structure and prose flow.
 

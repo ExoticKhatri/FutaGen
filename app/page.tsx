@@ -11,6 +11,8 @@ import {
   INITIAL_GENERATOR_STATE,
   ImageGenState,
   INITIAL_IMAGE_GEN_STATE,
+  MappedTraits,
+  TraitTitles,
 } from '@/types/data';
 import { TraitCategory, TRAIT_CATEGORIES } from '@/types/traits';
 import { fetchSpecificEntryColumn } from '@/actions/db_fetch';
@@ -30,10 +32,64 @@ export default function Home() {
   const randomSeedGen = () => seedEditorRef.current?.triggerRandomize();
   const isGenerating  = ['fetching_traits', 'generating_prompt', 'generating_image'].includes(imageGenState.status);
 
+  // Resolves one character's traits into the category → description map the
+  // prompt pipeline expects. Descriptions are fetched from Supabase when
+  // USE_TRAIT_DESCRIPTIONS is on; otherwise falls back to titles directly.
+  const buildTraitDataForCharacter = useCallback(async (
+    traits: MappedTraits | undefined,
+    titles: TraitTitles | undefined,
+  ): Promise<Record<string, string | string[]>> => {
+    const traitData: Record<string, string | string[]> = {};
+
+    if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
+      await Promise.all(
+        TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
+          const val = traits?.[category];
+
+          if (category === 'special' && Array.isArray(val)) {
+            const specialTitles = Array.isArray(titles?.special) ? titles.special : [];
+            const results = await Promise.all(
+              val.map(async (v, i) => {
+                const { data } = await fetchSpecificEntryColumn(category, 'description', v);
+                return (data as string | null) || specialTitles[i] || '';
+              })
+            );
+            traitData[category] = results.filter(Boolean);
+          } else if (typeof val === 'string' && val) {
+            const { data } = await fetchSpecificEntryColumn(category, 'description', val);
+            const titleFallback = typeof titles?.[category] === 'string' ? titles[category] as string : '';
+            traitData[category] = (data as string | null) || titleFallback;
+          }
+        })
+      );
+    } else {
+      TRAIT_CATEGORIES.forEach((category: TraitCategory) => {
+        const t = titles?.[category];
+        if (t) traitData[category] = t;
+      });
+    }
+
+    return traitData;
+  }, []);
+
+  // Resolves every character currently in the group, index-aligned.
+  const buildCharactersTraitData = useCallback((): Promise<Array<Record<string, string | string[]>>> => {
+    const perCharacterTraits = genState.charactersTraits.length
+      ? genState.charactersTraits
+      : (genState.traits ? [genState.traits] : []);
+    const perCharacterTitles = genState.charactersTraitTitles.length
+      ? genState.charactersTraitTitles
+      : (genState.traitTitles ? [genState.traitTitles] : []);
+
+    return Promise.all(
+      perCharacterTraits.map((traits, i) => buildTraitDataForCharacter(traits, perCharacterTitles[i]))
+    );
+  }, [genState.charactersTraits, genState.charactersTraitTitles, genState.traits, genState.traitTitles, buildTraitDataForCharacter]);
+
   // Runs all 3 prompt-generation stages with live status updates.
   // Returns the final prompt string, or null if any stage failed.
   const runPromptPipeline = useCallback(async (
-    traitData: Record<string, string | string[]>,
+    characters: Array<Record<string, string | string[]>>,
   ): Promise<{ prompt: string; rawInput: string } | null> => {
     const compData  = GENERATOR_CONFIG.COMPOSITIONS.find(c => c.id === genState.composition);
     const frameData = GENERATOR_CONFIG.FRAMES.find(f => f.id === genState.frame);
@@ -41,13 +97,13 @@ export default function Home() {
     const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
     const isWhiteBg = !genState.background || genState.background === 'plain_white';
 
-    // Stage 1 — Build character description
+    // Stage 1 — Build character description(s)
     setImageGenState(s => ({ ...s, message: 'Stage 1 / 3 — Building character description...' }));
     const s1 = await buildCharacterPrompt({
       composition:    compData?.label       || genState.composition,
       frame:          frameData?.ratio      || genState.frame,
       backgroundDesc: bgData?.description   || genState.background,
-      traits:         traitData,
+      characters,
     }, customApiKey);
     if (!s1.success || !s1.prompt) {
       setImageGenState(s => ({ ...s, status: 'error', message: s1.error || 'Stage 1 failed.' }));
@@ -57,9 +113,10 @@ export default function Home() {
     // Stage 2 — Apply art style
     setImageGenState(s => ({ ...s, message: 'Stage 2 / 3 — Applying art style...' }));
     const s2 = await applyArtStyle({
-      draft:     s1.prompt,
-      styleId:   genState.style,
+      draft:          s1.prompt,
+      styleId:        genState.style,
       isWhiteBg,
+      characterCount: characters.length,
     }, customApiKey);
     if (!s2.success || !s2.prompt) {
       setImageGenState(s => ({ ...s, status: 'error', message: s2.error || 'Stage 2 failed.' }));
@@ -78,54 +135,25 @@ export default function Home() {
   }, [genState]);
 
   const handleGenerate = useCallback(async () => {
-    if (!genState.traits) return;
-
-    const traitData: Record<string, string | string[]> = {};
+    if (genState.charactersTraits.length === 0 && !genState.traits) return;
 
     if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
-      // ── Step 1 (optional): Fetch trait descriptions from Supabase ─────────
       setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
+    }
 
-      try {
-        await Promise.all(
-          TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
-            const val    = genState.traits![category];
-            const titles = genState.traitTitles;
-
-            if (category === 'special' && Array.isArray(val)) {
-              const specialTitles = Array.isArray(titles?.special) ? titles.special : [];
-              const results = await Promise.all(
-                val.map(async (v, i) => {
-                  const { data } = await fetchSpecificEntryColumn(category, 'description', v);
-                  return (data as string | null) || specialTitles[i] || '';
-                })
-              );
-              traitData[category] = results.filter(Boolean);
-            } else if (typeof val === 'string' && val) {
-              const { data } = await fetchSpecificEntryColumn(category, 'description', val);
-              const titleFallback = typeof titles?.[category] === 'string' ? titles[category] as string : '';
-              traitData[category] = (data as string | null) || titleFallback;
-            }
-          })
-        );
-      } catch {
-        setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
-        return;
-      }
-    } else {
-      // Use trait titles directly — no DB round-trip needed
-      const titles = genState.traitTitles ?? {};
-      TRAIT_CATEGORIES.forEach((category: TraitCategory) => {
-        const t = titles[category];
-        if (t) traitData[category] = t;
-      });
+    let characters: Array<Record<string, string | string[]>>;
+    try {
+      characters = await buildCharactersTraitData();
+    } catch {
+      setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
+      return;
     }
 
     // ── Step 2: Generate master prompt (3 stages) ────────────────────────
     setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
 
     const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('openai_api_key') || undefined : undefined;
-    const pipelineResult = await runPromptPipeline(traitData);
+    const pipelineResult = await runPromptPipeline(characters);
     if (!pipelineResult) return;
 
     const prompt = pipelineResult.prompt;
@@ -208,55 +236,30 @@ export default function Home() {
           : `${successUrls.length} / ${SLOT_COUNT} generated. ${failCount} save(s) failed.`,
       }));
     });
-  }, [genState]);
+  }, [genState, buildCharactersTraitData, runPromptPipeline]);
 
   const handlePromptOnly = useCallback(async () => {
-    if (!genState.traits) return;
-
-    const traitData: Record<string, string | string[]> = {};
+    if (genState.charactersTraits.length === 0 && !genState.traits) return;
 
     if (FEATURE_FLAGS.USE_TRAIT_DESCRIPTIONS) {
       setImageGenState({ status: 'fetching_traits', message: 'Fetching trait descriptions from database...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
-      try {
-        await Promise.all(
-          TRAIT_CATEGORIES.map(async (category: TraitCategory) => {
-            const val    = genState.traits![category];
-            const titles = genState.traitTitles;
-            if (category === 'special' && Array.isArray(val)) {
-              const specialTitles = Array.isArray(titles?.special) ? titles.special : [];
-              const results = await Promise.all(
-                val.map(async (v, i) => {
-                  const { data } = await fetchSpecificEntryColumn(category, 'description', v);
-                  return (data as string | null) || specialTitles[i] || '';
-                })
-              );
-              traitData[category] = results.filter(Boolean);
-            } else if (typeof val === 'string' && val) {
-              const { data } = await fetchSpecificEntryColumn(category, 'description', val);
-              const titleFallback = typeof titles?.[category] === 'string' ? titles[category] as string : '';
-              traitData[category] = (data as string | null) || titleFallback;
-            }
-          })
-        );
-      } catch {
-        setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
-        return;
-      }
-    } else {
-      const titles = genState.traitTitles ?? {};
-      TRAIT_CATEGORIES.forEach((category: TraitCategory) => {
-        const t = titles[category];
-        if (t) traitData[category] = t;
-      });
+    }
+
+    let characters: Array<Record<string, string | string[]>>;
+    try {
+      characters = await buildCharactersTraitData();
+    } catch {
+      setImageGenState(s => ({ ...s, status: 'error', message: 'Failed to fetch trait descriptions.' }));
+      return;
     }
 
     setImageGenState({ status: 'generating_prompt', message: 'Stage 1 / 3 — Building character description...', imageUrl: null, prompt: null, rawInput: null, attempt: 0, slots: [] });
 
-    const pipelineResult = await runPromptPipeline(traitData);
+    const pipelineResult = await runPromptPipeline(characters);
     if (!pipelineResult) return;
 
     setImageGenState({ status: 'prompt_done', message: 'Prompt assembled. View it in the Prompt tab.', imageUrl: null, prompt: pipelineResult.prompt, rawInput: null, attempt: 0, slots: [] });
-  }, [genState]);
+  }, [genState, buildCharactersTraitData, runPromptPipeline]);
 
   return (
     <main className="relative flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
